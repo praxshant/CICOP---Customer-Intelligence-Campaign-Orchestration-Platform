@@ -1,0 +1,95 @@
+{
+    "Experiment": "30-Day Next-Purchase Prediction",
+    "Target": "TARGET_next_purchase_30d",
+    "Feature Count": 19,
+    "Training Rows": 41749,
+    "Validation Rows": 14468,
+    "Test Rows": 15430,
+    "Validation Metrics": {
+        "Logistic Regression": {
+            "ROC-AUC": 0.7896373354950127,
+            "PR-AUC": 0.5198252975527933,
+            "Precision": 0.42393736017897093,
+            "Recall": 0.5891954916439953,
+            "F1": 0.4930883070417954,
+            "Accuracy": 0.7845590268178048,
+            "Brier Score": 0.1634421233698746,
+            "Log Loss": 0.507625067323169
+        },
+        "Random Forest": {
+            "ROC-AUC": 0.7596362098926562,
+            "PR-AUC": 0.4704300186367326,
+            "Precision": 0.6913907284768211,
+            "Recall": 0.20287602020987175,
+            "F1": 0.3137019230769231,
+            "Accuracy": 0.8421343654962676,
+            "Brier Score": 0.12193531022581074,
+            "Log Loss": 0.47568736639166953
+        },
+        "HistGradientBoosting": {
+            "ROC-AUC": 0.7898767832996552,
+            "PR-AUC": 0.5335312807234704,
+            "Precision": 0.7341176470588235,
+            "Recall": 0.24251846094053633,
+            "F1": 0.36459246275197194,
+            "Accuracy": 0.849668233342549,
+            "Brier Score": 0.11438433875443492,
+            "Log Loss": 0.3751131242121087
+        },
+        "XGBoost": {
+            "ROC-AUC": 0.7453482481363439,
+            "PR-AUC": 0.4834775098403037,
+            "Precision": 0.436331569664903,
+            "Recall": 0.4807617567042363,
+            "F1": 0.45747041420118345,
+            "Accuracy": 0.7972076306331214,
+            "Brier Score": 0.1499990657402472,
+            "Log Loss": 0.4678453033527718
+        },
+        "HistGradientBoosting_Tuned": {
+            "ROC-AUC": 0.7958138374594257,
+            "PR-AUC": 0.539995269548444,
+            "Precision": 0.7243436754176611,
+            "Recall": 0.23591138748542556,
+            "F1": 0.35590735854588096,
+            "Accuracy": 0.8481476361625656,
+            "Brier Score": 0.11424236512281512,
+            "Log Loss": 0.37536140028536097
+        }
+    },
+    "Selected Model": "HistGradientBoosting_Tuned",
+    "Model Selection Rationale": "Selected HistGradientBoosting_Tuned as best model amongst evaluated candidates based on max PR-AUC on Validation Set. This is a baseline comparative experiment, not exhaustive.",
+    "Final Test Metrics (Full Feature)": {
+        "ROC-AUC": 0.8191473343333368,
+        "PR-AUC": 0.5626585977585847,
+        "Precision": 0.7216589861751153,
+        "Recall": 0.2856621670923021,
+        "F1": 0.40930475692629376,
+        "Accuracy": 0.8535320803629294,
+        "Brier Score": 0.10984859240549905,
+        "Log Loss": 0.3588759473628206,
+        "Lift@10%": 3.6483035388544334
+    },
+    "Final Test Metrics (RFM)": {
+        "ROC-AUC": 0.8044851160917558,
+        "PR-AUC": 0.5273135470219272,
+        "Precision": 0.643652561247216,
+        "Recall": 0.3163079168186793,
+        "F1": 0.4241682974559687,
+        "Accuracy": 0.8474400518470512,
+        "Brier Score": 0.11498599400257559,
+        "Log Loss": 0.37592950861083313,
+        "Lift@10%": 3.4768332725282742
+    },
+    "RFM vs Full Deltas": {
+        "ROC-AUC": 0.014662218241580982,
+        "PR-AUC": 0.0353450507366575,
+        "F1": -0.014863540529674923,
+        "Brier Score": -0.005137401597076541,
+        "Lift@10%": 0.17147026632615914
+    },
+    "Lift Analysis": [
+        {
+            "Top %": "1%",
+            "Customers Targeted": 154,
+            "Actual Purchasers": 

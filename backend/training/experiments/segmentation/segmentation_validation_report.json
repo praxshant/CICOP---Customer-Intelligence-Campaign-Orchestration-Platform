@@ -1,0 +1,166 @@
+{
+    "status": "PHASE_2_VALIDATION_COMPLETE_AWAITING_REVIEW",
+    "final_algorithm": "KMeans",
+    "final_k": 4,
+    "k_is_silhouette_optimal": false,
+    "selection_justification": "K=2 has the strongest raw silhouette but collapses useful behavioral distinctions. K=3 merges behaviorally meaningful populations. K=5/6 introduce very small/pathological clusters and do not add a sufficiently distinct operational cohort. K=4 provides four interpretable, non-pathological behavioral cohorts. K=4 is therefore selected on BUSINESS INTERPRETABILITY and OPERATIONAL USEFULNESS, not because it is the statistical silhouette optimum.",
+    "hdbscan_available": true,
+    "hdbscan_note": "Evaluated and included in comparison.",
+    "algorithm_comparison": {
+        "KMeans": {
+            "2": {
+                "silhouette": 0.3218,
+                "davies_bouldin": 1.2869,
+                "min_cluster_pct": 0.3413
+            },
+            "3": {
+                "silhouette": 0.2369,
+                "davies_bouldin": 1.4627,
+                "min_cluster_pct": 0.2129
+            },
+            "4": {
+                "silhouette": 0.2461,
+                "davies_bouldin": 1.4217,
+                "min_cluster_pct": 0.109
+            },
+            "5": {
+                "silhouette": 0.2569,
+                "davies_bouldin": 1.2719,
+                "min_cluster_pct": 0.0141
+            },
+            "6": {
+                "silhouette": 0.2575,
+                "davies_bouldin": 1.3138,
+                "min_cluster_pct": 0.0137
+            }
+        },
+        "GMM": {
+            "2": {
+                "silhouette": 0.2997,
+                "davies_bouldin": 1.35,
+                "min_cluster_pct": 0.3629
+            },
+            "3": {
+                "silhouette": 0.2292,
+                "davies_bouldin": 1.4654,
+                "min_cluster_pct": 0.2146
+            },
+            "4": {
+                "silhouette": 0.2041,
+                "davies_bouldin": 1.9077,
+                "min_cluster_pct": 0.0917
+            },
+            "5": {
+                "silhouette": 0.2161,
+                "davies_bouldin": 1.9966,
+                "min_cluster_pct": 0.0553
+            },
+            "6": {
+                "silhouette": 0.2086,
+                "davies_bouldin": 1.7016,
+                "min_cluster_pct": 0.0459
+            }
+        }
+    },
+    "frequency_stability": {
+        "issue": "FEATURE_purchase_frequency uses lifetime_days as denominator. Customers with lifetime_days=1 receive frequency=30 (1 order / (1/30)), which is semantically misleading for clustering.",
+        "fix": "Created SEG_purchase_frequency_stable using max(lifetime_days, 90) as denominator. Canonical FEATURE_purchase_frequency NOT modified.",
+        "impact": "Frequency stabilization materially changed cluster assignments (ARI = 0.5882) and removed a pathological micro-cluster produced by the unstable lifetime-frequency representation. The stabilized representation therefore becomes the canonical segmentation input."
+    },
+    "return_behavior": {
+        "finding": "FEATURE_return_rate and FEATURE_return_line_count are zero for all identified customers (expected \u2014 see Phase 1 integrity note). FEATURE_cancellation_line_count and FEATURE_total_return_amount carry valid return signal for active/established clusters. SEG_return_spend_ratio (normalised) included as clustering feature."
+    },
+    "cluster_profiles": {
+        "0": {
+            "size": 1727,
+            "size_pct": 32.91,
+            "median_recency_days": 236.0,
+            "median_purchase_order_count": 4.0,
+            "median_purchase_order_count_90d": 0.0,
+            "median_total_net_spend": 1052.9,
+            "median_average_order_value": 291.24,
+            "median_unique_products": 55.0,
+            "median_lifetime_days": 244.0,
+            "median_stable_freq": 0.5128,
+            "median_cancellation_lines": 0.0,
+            "median_return_spend_ratio": 0.0,
+            "segment_name": "Dormant Multi-Buyers",
+            "segment_name_note": "Finalized business labels"
+        },
+        "1": {
+            "size": 572,
+            "size_pct": 10.9,
+            "median_recency_days": 15.0,
+            "median_purchase_order_count": 17.0,
+            "median_purchase_order_count_90d": 3.0,
+            "median_total_net_spend": 6157.94,
+            "median_average_order_value": 370.49,
+            "median_unique_products": 173.0,
+            "median_lifetime_days": 562.5,
+            "median_stable_freq": 1.0631,
+            "median_cancellation_lines": 6.5,
+            "median_return_spend_ratio": 0.015,
+            "segment_name": "Active High-Value",
+            "segment_name_note": "Finalized business labels"
+        },
+        "2": {
+            "size": 1263,
+            "size_pct": 24.07,
+            "median_recency_days": 41.0,
+            "median_purchase_order_count": 4.0,
+            "median_purchase_order_count_90d": 1.0,
+            "median_total_net_spend": 1217.76,
+            "median_average_order_value": 296.84,
+            "median_unique_products": 57.0,
+            "median_lifetime_days": 382.0,
+            "median_stable_freq": 0.4233,
+            "median_cancellation_lines": 0.0,
+            "median_return_spend_ratio": 0.0,
+            "segment_name": "Recent Repeat Buyers",
+            "segment_name_note": "Finalized business labels"
+        },
+        "3": {
+            "size": 1685,
+            "size_pct": 32.11,
+            "median_recency_days": 330.0,
+            "median_purchase_order_count": 1.0,
+            "median_purchase_order_count_90d": 0.0,
+            "median_total_net_spend": 219.35,
+            "median_average_order_value": 199.45,
+            "median_unique_products": 14.0,
+            "median_lifetime_days": 1.0,
+            "median_stable_freq": 0.3333,
+            "median_cancellation_lines": 0.0,
+            "median_return_spend_ratio": 0.0,
+            "segment_name": "One-Time Dormant",
+            "segment_name_note": "Finalized business labels"
+        }
+    },
+    "segment_propensity_matrix": {
+        "0": {
+            "1_LOW": 0.7649,
+            "2_MODERATE": 0.1836,
+            "3_HIGH": 0.0515,
+            "4_VERY_HIGH": 0.0
+        },
+        "1": {
+            "1_LOW": 0.0087,
+            "2_MODERATE": 0.0367,
+            "3_HIGH": 0.1853,
+            "4_VERY_HIGH": 0.7692
+        },
+        "2": {
+            "1_LOW": 0.2082,
+            "2_MODERATE": 0.4909,
+            "3_HIGH": 0.2502,
+            "4_VERY_HIGH": 0.0507
+        },
+        "3": {
+            "1_LOW": 0.9988,
+            "2_MODERATE": 0.0012,
+            "3_HIGH": 0.0,
+            "4_VERY_HIGH": 0.0
+        }
+    },
+    "next_step": "Human review of cluster profiles \u2192 assign business names \u2192 Phase 3"
+}

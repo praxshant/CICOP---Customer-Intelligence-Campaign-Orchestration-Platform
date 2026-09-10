@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment & Secrets
+.env
+!.env.example
+.env.prod
+*.pem
+*.key
+
+# Database & SQLite artifacts
+*.db
+*.sqlite
+*.sqlite3
+backend/data/exports/
+
+# ML models & artifacts
+*.pkl
+*.h5
+*.onnx
+backend/models/backup/
+backend/models/artifacts/
+
+# Data & Training artifacts
+*.csv
+*.tsv
+*.parquet
+*.xlsx
+*.xls
+backend/training/experiments/**/cluster_profiles.csv
+
+# Logs & temp files
+*.log
+logs/
+backend/logs/
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+bandit-report.txt
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+

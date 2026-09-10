@@ -1,0 +1,113 @@
+{
+  "signals": {
+    "recency_elevated": {
+      "description": "Recency is materially above normal interval",
+      "threshold": 2.0
+    },
+    "spend_declining": {
+      "description": "Recent 90-day spend is materially below historical baseline",
+      "threshold": 0.70
+    },
+    "frequency_declining": {
+      "description": "Recent 90-day purchase frequency is below historical cadence",
+      "threshold": 0.50
+    },
+    "return_risk": {
+      "description": "Elevated return behavior relative to purchases",
+      "threshold": 0.15
+    }
+  },
+  "rules": [
+    {
+      "rule_id": "RETURN_RISK_01",
+      "priority": 100,
+      "conditions": {
+        "signals": {
+          "return_risk": true
+        }
+      },
+      "recommendation": "Margin-aware retention review",
+      "rationale": "High return rate detected. Focus on reducing margin bleed before issuing generic discounts."
+    },
+    {
+      "rule_id": "WINBACK_01",
+      "priority": 90,
+      "conditions": {
+        "segment": "Dormant Multi-Buyers",
+        "propensity_bands": ["1_LOW", "2_MODERATE"],
+        "signals": {
+          "recency_elevated": true
+        }
+      },
+      "recommendation": "High-value reactivation / win-back",
+      "rationale": "Customer has proven historical affinity but is showing severe signs of churn."
+    },
+    {
+      "rule_id": "RETENTION_01",
+      "priority": 80,
+      "conditions": {
+        "segment": "Active High-Value",
+        "propensity_bands": ["3_HIGH", "4_VERY_HIGH"],
+        "signals": {
+          "spend_declining": true
+        }
+      },
+      "recommendation": "Proactive retention offer",
+      "rationale": "Customer is highly active and likely to return, but spend is dropping. Intervene to retain share of wallet."
+    },
+    {
+      "rule_id": "CROSS_SELL_01",
+      "priority": 70,
+      "conditions": {
+        "segment": "Active High-Value",
+        "propensity_bands": ["3_HIGH", "4_VERY_HIGH"]
+      },
+      "recommendation": "Light-touch cross-sell",
+      "rationale": "Customer is highly engaged and likely to buy again. Focus on discovery rather than deep discounting."
+    },
+    {
+      "rule_id": "NURTURE_01",
+      "priority": 60,
+      "conditions": {
+        "segment": "Recent Repeat Buyers",
+        "propensity_bands": ["2_MODERATE", "3_HIGH"]
+      },
+      "recommendation": "Targeted Nurture",
+      "rationale": "Customer is establishing a habit. Nurture into next purchase to solidify loyalty."
+    },
+    {
+      "rule_id": "NO_ACTION_01",
+      "priority": 50,
+      "conditions": {
+        "segment": "One-Time Dormant",
+        "propensity_bands": ["1_LOW"]
+      },
+      "recommendation": "No Action / Minimum Target",
+      "rationale": "Lowest-value and lowest-likelihood population. Do not spend expensive targeting budget here."
+    },
+    {
+      "rule_id": "DEFAULT_01",
+      "priority": 0,
+      "conditions": {},
+      "recommendation": "Standard engagement",
+      "rationale": "Fallback recommendation for customers not matching specific high-priority rules."
+    }
+  ],
+  "confidence_rules": {
+    "HIGH": {
+      "min_history_days": 90,
+      "min_signals_matched": 0,
+      "description": "Strong alignment with sufficient baseline history."
+    },
+    "MEDIUM": {
+      "min_history_days": 30,
+      "min_signals_matched": 0,
+      "description": "Moderate alignment or partial history."
+    },
+    "LOW": {
+      "min_history_days": 0,
+      "min_signals_matched": 0,
+      "description": "Limited history, fallback policy, or conflicting signals."
+    }
+  }
+}

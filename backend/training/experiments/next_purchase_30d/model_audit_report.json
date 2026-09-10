@@ -1,0 +1,675 @@
+{
+    "model": "model_HistGradientBoosting_Tuned.pkl",
+    "target": "TARGET_next_purchase_30d",
+    "feature_count": 19,
+    "audit_status": "PHASE_1_FROZEN",
+    "audit_completed": "2026-08-20T17:00:59.756672",
+    "validation_rows": 14468,
+    "test_rows": 15430,
+    "validation_positive_rate": 0.1778,
+    "test_positive_rate": 0.1776,
+    "test_metrics_default_threshold": {
+        "threshold_used": 0.5,
+        "ROC-AUC": 0.8191,
+        "PR-AUC": 0.5627,
+        "Precision": 0.7217,
+        "Recall": 0.2857,
+        "F1": 0.4093,
+        "Brier Score": 0.1098,
+        "Log Loss": 0.3589,
+        "Lift@10%": 3.648
+    },
+    "test_targeting_budget": [
+        {
+            "Budget": "Top 1%",
+            "Customers": 154,
+            "Purchasers Found": 144,
+            "Precision@Budget": 0.9351,
+            "Lift": 5.264,
+            "Capture Rate": 0.0525
+        },
+        {
+            "Budget": "Top 5%",
+            "Customers": 771,
+            "Purchasers Found": 604,
+            "Precision@Budget": 0.7834,
+            "Lift": 4.41,
+            "Capture Rate": 0.2204
+        },
+        {
+            "Budget": "Top 10%",
+            "Customers": 1543,
+            "Purchasers Found": 1000,
+            "Precision@Budget": 0.6481,
+            "Lift": 3.648,
+            "Capture Rate": 0.3648
+        },
+        {
+            "Budget": "Top 15%",
+            "Customers": 2314,
+            "Purchasers Found": 1288,
+            "Precision@Budget": 0.5566,
+            "Lift": 3.133,
+            "Capture Rate": 0.4699
+        },
+        {
+            "Budget": "Top 20%",
+            "Customers": 3086,
+            "Purchasers Found": 1519,
+            "Precision@Budget": 0.4922,
+            "Lift": 2.771,
+            "Capture Rate": 0.5542
+        },
+        {
+            "Budget": "Top 30%",
+            "Customers": 4629,
+            "Purchasers Found": 1876,
+            "Precision@Budget": 0.4053,
+            "Lift": 2.281,
+            "Capture Rate": 0.6844
+        }
+    ],
+    "calibration": {
+        "brier_score": 0.1098,
+        "mean_predicted_prob_test": 0.1822,
+        "actual_positive_rate_test": 0.1776
+    },
+    "feature_importance_top5": [
+        {
+            "feature": "FEATURE_recency_days",
+            "importance": 0.06375778435281357
+        },
+        {
+            "feature": "FEATURE_purchase_frequency",
+            "importance": 0.047128419292122636
+        },
+        {
+            "feature": "FEATURE_purchase_order_count",
+            "importance": 0.0261301516785043
+        },
+        {
+            "feature": "FEATURE_purchase_order_count_90d",
+            "importance": 0.021957503406661784
+        },
+        {
+            "feature": "FEATURE_total_net_spend",
+            "importance": 0.003767408314421883
+        }
+    ],
+    "feature_importance_full": [
+        {
+            "feature": "FEATURE_recency_days",
+            "importance": 0.06375778435281357
+        },
+        {
+            "feature": "FEATURE_purchase_frequency",
+            "importance": 0.047128419292122636
+        },
+        {
+            "feature": "FEATURE_purchase_order_count",
+            "importance": 0.0261301516785043
+        },
+        {
+            "feature": "FEATURE_purchase_order_count_90d",
+            "importance": 0.021957503406661784
+        },
+        {
+            "feature": "FEATURE_total_net_spend",
+            "importance": 0.003767408314421883
+        },
+        {
+            "feature": "FEATURE_net_spend_90d",
+            "importance": 0.002962545404627037
+        },
+        {
+            "feature": "FEATURE_purchase_line_count",
+            "importance": 0.0010246106787745956
+        },
+        {
+            "feature": "FEATURE_average_order_value",
+            "importance": 0.0010124635973525864
+        },
+        {
+            "feature": "FEATURE_total_return_amount",
+            "importance": 0.0005692199068017434
+        },
+        {
+            "feature": "FEATURE_customer_lifetime_days",
+            "importance": 0.0002865076899656316
+        },
+        {
+            "feature": "FEATURE_unique_products_purchased",
+            "importance": 0.00022140037624105436
+        },
+        {
+            "feature": "FEATURE_net_spend_30d",
+            "importance": 0.00017602277398305334
+        },
+        {
+            "feature": "FEATURE_return_rate",
+            "importance": 0.0
+        },
+        {
+            "feature": "FEATURE_return_line_count",
+            "importance": 0.0
+        },
+        {
+            "feature": "FEATURE_is_active_30d",
+            "importance": 0.0
+        },
+        {
+            "feature": "FEATURE_is_active_90d",
+            "importance": 0.0
+        },
+        {
+            "feature": "FEATURE_total_gross_purchase_spend",
+            "importance": -1.4134235423668428e-05
+        },
+        {
+            "feature": "FEATURE_cancellation_line_count",
+            "importance": -0.00018970494789272152
+        },
+        {
+            "feature": "FEATURE_purchase_order_count_30d",
+            "importance": -0.0006223891672976656
+        }
+    ],
+    "val_threshold_sweep": [
+        {
+            "threshold": 0.05,
+            "precision": 0.1946,
+            "recall": 0.9876,
+            "f1": 0.3252,
+            "predicted_positive_rate": 0.9024
+        },
+        {
+            "threshold": 0.075,
+            "precision": 0.2187,
+            "recall": 0.9592,
+            "f1": 0.3562,
+            "predicted_positive_rate": 0.78
+        },
+        {
+            "threshold": 0.1,
+            "precision": 0.2528,
+            "recall": 0.9083,
+            "f1": 0.3955,
+            "predicted_positive_rate": 0.6389
+        },
+        {
+            "threshold": 0.125,
+            "precision": 0.2867,
+            "recall": 0.8515,
+            "f1": 0.4289,
+            "predicted_positive_rate": 0.5283
+        },
+        {
+            "threshold": 0.15,
+            "precision": 0.3217,
+            "recall": 0.7987,
+            "f1": 0.4587,
+            "predicted_positive_rate": 0.4415
+        },
+        {
+            "threshold": 0.175,
+            "precision": 0.3519,
+            "recall": 0.7497,
+            "f1": 0.479,
+            "predicted_positive_rate": 0.3789
+        },
+        {
+            "threshold": 0.2,
+            "precision": 0.3843,
+            "recall": 0.6941,
+            "f1": 0.4947,
+            "predicted_positive_rate": 0.3212
+        },
+        {
+            "threshold": 0.225,
+            "precision": 0.4179,
+            "recall": 0.6401,
+            "f1": 0.5057,
+            "predicted_positive_rate": 0.2724
+        },
+        {
+            "threshold": 0.25,
+            "precision": 0.4565,
+            "recall": 0.5834,
+            "f1": 0.5122,
+            "predicted_positive_rate": 0.2273
+        },
+        {
+            "threshold": 0.275,
+            "precision": 0.4901,
+            "recall": 0.5394,
+            "f1": 0.5136,
+            "predicted_positive_rate": 0.1957
+        },
+        {
+            "threshold": 0.3,
+            "precision": 0.5234,
+            "recall": 0.4963,
+            "f1": 0.5095,
+            "predicted_positive_rate": 0.1686
+        },
+        {
+            "threshold": 0.325,
+            "precision": 0.5562,
+            "recall": 0.4574,
+            "f1": 0.502,
+            "predicted_positive_rate": 0.1463
+        },
+        {
+            "threshold": 0.35,
+            "precision": 0.5851,
+            "recall": 0.4209,
+            "f1": 0.4896,
+            "predicted_positive_rate": 0.1279
+        },
+        {
+            "threshold": 0.375,
+            "precision": 0.614,
+            "recall": 0.3956,
+            "f1": 0.4812,
+            "predicted_positive_rate": 0.1146
+        },
+        {
+            "threshold": 0.4,
+            "precision": 0.6366,
+            "recall": 0.3622,
+            "f1": 0.4617,
+            "predicted_positive_rate": 0.1012
+        },
+        {
+            "threshold": 0.425,
+            "precision": 0.6536,
+            "recall": 0.3358,
+            "f1": 0.4436,
+            "predicted_positive_rate": 0.0914
+        },
+        {
+            "threshold": 0.45,
+            "precision": 0.6678,
+            "recall": 0.3086,
+            "f1": 0.4221,
+            "predicted_positive_rate": 0.0822
+        },
+        {
+            "threshold": 0.475,
+            "precision": 0.6981,
+            "recall": 0.2903,
+            "f1": 0.4101,
+            "predicted_positive_rate": 0.074
+        },
+        {
+            "threshold": 0.5,
+            "precision": 0.709,
+            "recall": 0.2689,
+            "f1": 0.39,
+            "predicted_positive_rate": 0.0675
+        },
+        {
+            "threshold": 0.525,
+            "precision": 0.7334,
+            "recall": 0.2534,
+            "f1": 0.3767,
+            "predicted_positive_rate": 0.0614
+        },
+        {
+            "threshold": 0.55,
+            "precision": 0.7547,
+            "recall": 0.2355,
+            "f1": 0.359,
+            "predicted_positive_rate": 0.0555
+        },
+        {
+            "threshold": 0.575,
+            "precision": 0.7696,
+            "recall": 0.2141,
+            "f1": 0.3351,
+            "predicted_positive_rate": 0.0495
+        },
+        {
+            "threshold": 0.6,
+            "precision": 0.7953,
+            "recall": 0.1994,
+            "f1": 0.3188,
+            "predicted_positive_rate": 0.0446
+        },
+        {
+            "threshold": 0.625,
+            "precision": 0.8223,
+            "recall": 0.178,
+            "f1": 0.2927,
+            "predicted_positive_rate": 0.0385
+        },
+        {
+            "threshold": 0.65,
+            "precision": 0.8364,
+            "recall": 0.157,
+            "f1": 0.2644,
+            "predicted_positive_rate": 0.0334
+        },
+        {
+            "threshold": 0.675,
+            "precision": 0.8595,
+            "recall": 0.1426,
+            "f1": 0.2447,
+            "predicted_positive_rate": 0.0295
+        },
+        {
+            "threshold": 0.7,
+            "precision": 0.8774,
+            "recall": 0.1251,
+            "f1": 0.219,
+            "predicted_positive_rate": 0.0254
+        },
+        {
+            "threshold": 0.725,
+            "precision": 0.8973,
+            "recall": 0.1154,
+            "f1": 0.2045,
+            "predicted_positive_rate": 0.0229
+        },
+        {
+            "threshold": 0.75,
+            "precision": 0.9007,
+            "recall": 0.1022,
+            "f1": 0.1836,
+            "predicted_positive_rate": 0.0202
+        },
+        {
+            "threshold": 0.775,
+            "precision": 0.9091,
+            "recall": 0.0894,
+            "f1": 0.1628,
+            "predicted_positive_rate": 0.0175
+        }
+    ],
+    "val_targeting_budget": [
+        {
+            "Budget": "Top 1%",
+            "Customers Targeted": 144,
+            "Purchasers Found": 135,
+            "Precision@Budget": 0.9375,
+            "Lift": 5.272,
+            "Capture Rate": 0.0525,
+            "Min Score in Group": 0.8238
+        },
+        {
+            "Budget": "Top 5%",
+            "Customers Targeted": 723,
+            "Purchasers Found": 556,
+            "Precision@Budget": 0.769,
+            "Lift": 4.324,
+            "Capture Rate": 0.2161,
+            "Min Score in Group": 0.5728
+        },
+        {
+            "Budget": "Top 10%",
+            "Customers Targeted": 1446,
+            "Purchasers Found": 922,
+            "Precision@Budget": 0.6376,
+            "Lift": 3.585,
+            "Capture Rate": 0.3583,
+            "Min Score in Group": 0.4029
+        },
+        {
+            "Budget": "Top 15%",
+            "Customers Targeted": 2170,
+            "Purchasers Found": 1192,
+            "Precision@Budget": 0.5493,
+            "Lift": 3.089,
+            "Capture Rate": 0.4633,
+            "Min Score in Group": 0.3193
+        },
+        {
+            "Budget": "Top 20%",
+            "Customers Targeted": 2893,
+            "Purchasers Found": 1404,
+            "Precision@Budget": 0.4853,
+            "Lift": 2.729,
+            "Capture Rate": 0.5457,
+            "Min Score in Group": 0.2703
+        },
+        {
+            "Budget": "Top 30%",
+            "Customers Targeted": 4340,
+            "Purchasers Found": 1721,
+            "Precision@Budget": 0.3965,
+            "Lift": 2.23,
+            "Capture Rate": 0.6689,
+            "Min Score in Group": 0.2105
+        }
+    ],
+    "val_score_decile_analysis": [
+        {
+            "decile": 0,
+            "n": 1450,
+            "actual_rate": 0.0234,
+            "prob_min": 0.0124,
+            "prob_max": 0.0528,
+            "prob_mean": 0.0334,
+            "lift_over_base": 0.1318
+        },
+        {
+            "decile": 1,
+            "n": 1444,
+            "actual_rate": 0.0395,
+            "prob_min": 0.0528,
+            "prob_max": 0.0723,
+            "prob_mean": 0.0626,
+            "lift_over_base": 0.222
+        },
+        {
+            "decile": 2,
+            "n": 1448,
+            "actual_rate": 0.0525,
+            "prob_min": 0.0723,
+            "prob_max": 0.0895,
+            "prob_mean": 0.0805,
+            "lift_over_base": 0.2951
+        },
+        {
+            "decile": 3,
+            "n": 1445,
+            "actual_rate": 0.0754,
+            "prob_min": 0.0895,
+            "prob_max": 0.109,
+            "prob_mean": 0.0985,
+            "lift_over_base": 0.4242
+        },
+        {
+            "decile": 4,
+            "n": 1447,
+            "actual_rate": 0.1016,
+            "prob_min": 0.109,
+            "prob_max": 0.1331,
+            "prob_mean": 0.1201,
+            "lift_over_base": 0.5712
+        },
+        {
+            "decile": 5,
+            "n": 1447,
+            "actual_rate": 0.1216,
+            "prob_min": 0.1331,
+            "prob_max": 0.1658,
+            "prob_mean": 0.1482,
+            "lift_over_base": 0.6839
+        },
+        {
+            "decile": 6,
+            "n": 1447,
+            "actual_rate": 0.1748,
+            "prob_min": 0.1659,
+            "prob_max": 0.2104,
+            "prob_mean": 0.1871,
+            "lift_over_base": 0.9832
+        },
+        {
+            "decile": 7,
+            "n": 1446,
+            "actual_rate": 0.2192,
+            "prob_min": 0.2105,
+            "prob_max": 0.2703,
+            "prob_mean": 0.238,
+            "lift_over_base": 1.2327
+        },
+        {
+            "decile": 8,
+            "n": 1447,
+            "actual_rate": 0.3324,
+            "prob_min": 0.2703,
+            "prob_max": 0.4021,
+            "prob_mean": 0.3261,
+            "lift_over_base": 1.8692
+        },
+        {
+            "decile": 9,
+            "n": 1447,
+            "actual_rate": 0.6379,
+            "prob_min": 0.4025,
+            "prob_max": 0.9455,
+            "prob_mean": 0.6022,
+            "lift_over_base": 3.5868
+        }
+    ],
+    "cohort_stability": [
+        {
+            "cohort": "Full Test Set",
+            "n": 15430,
+            "pos_rate": 0.1776,
+            "ROC-AUC": 0.8191,
+            "PR-AUC": 0.5627,
+            "Brier": 0.1098,
+            "Lift@10%": 3.648
+        },
+        {
+            "cohort": "High Value",
+            "n": 7713,
+            "pos_rate": 0.2832,
+            "ROC-AUC": 0.779,
+            "PR-AUC": 0.6298,
+            "Brier": 0.157,
+            "Lift@10%": 2.767
+        },
+        {
+            "cohort": "Low Value",
+            "n": 7717,
+            "pos_rate": 0.0722,
+            "ROC-AUC": 0.7512,
+            "PR-AUC": 0.2076,
+            "Brier": 0.0627,
+            "Lift@10%": 3.288
+        },
+        {
+            "cohort": "High Frequency",
+            "n": 6424,
+            "pos_rate": 0.3154,
+            "ROC-AUC": 0.7729,
+            "PR-AUC": 0.6512,
+            "Brier": 0.1681,
+            "Lift@10%": 2.548
+        },
+        {
+            "cohort": "Low Frequency",
+            "n": 9006,
+            "pos_rate": 0.0794,
+            "ROC-AUC": 0.7444,
+            "PR-AUC": 0.2154,
+            "Brier": 0.0683,
+            "Lift@10%": 3.261
+        },
+        {
+            "cohort": "Recently Active",
+            "n": 3866,
+            "pos_rate": 0.3895,
+            "ROC-AUC": 0.7682,
+            "PR-AUC": 0.7132,
+            "Brier": 0.1835,
+            "Lift@10%": 2.261
+        },
+        {
+            "cohort": "Moderately Active",
+            "n": 7733,
+            "pos_rate": 0.1408,
+            "ROC-AUC": 0.7413,
+            "PR-AUC": 0.3255,
+            "Brier": 0.1093,
+            "Lift@10%": 2.811
+        },
+        {
+            "cohort": "Dormant",
+            "n": 3831,
+            "pos_rate": 0.0381,
+            "ROC-AUC": 0.6676,
+            "PR-AUC": 0.0631,
+            "Brier": 0.0365,
+            "Lift@10%": 2.055
+        }
+    ],
+    "error_cohort_profile": {
+        "False Negative": {
+            "FEATURE_recency_days": 102.8984,
+            "FEATURE_purchase_order_count": 6.0858,
+            "FEATURE_total_gross_purchase_spend": 2427.7961,
+            "FEATURE_average_order_value": 394.0601,
+            "FEATURE_return_rate": 0.0,
+            "FEATURE_purchase_order_count_30d": 0.3131,
+            "FEATURE_purchase_order_count_90d": 0.9826,
+            "FEATURE_is_active_90d": 0.6267,
+            "prob": 0.2349
+        },
+        "False Positive": {
+            "FEATURE_recency_days": 21.4669,
+            "FEATURE_purchase_order_count": 19.0629,
+            "FEATURE_total_gross_purchase_spend": 9472.6127,
+            "FEATURE_average_order_value": 468.4639,
+            "FEATURE_return_rate": 0.0,
+            "FEATURE_purchase_order_count_30d": 1.1358,
+            "FEATURE_purchase_order_count_90d": 3.5795,
+            "FEATURE_is_active_90d": 1.0,
+            "prob": 0.6237
+        },
+        "True Negative": {
+            "FEATURE_recency_days": 220.1035,
+            "FEATURE_purchase_order_count": 3.4553,
+            "FEATURE_total_gross_purchase_spend": 1289.5667,
+            "FEATURE_average_order_value": 354.9186,
+            "FEATURE_return_rate": 0.0,
+            "FEATURE_purchase_order_count_30d": 0.1288,
+            "FEATURE_purchase_order_count_90d": 0.3883,
+            "FEATURE_is_active_90d": 0.2909,
+            "prob": 0.13
+        },
+        "True Positive": {
+            "FEATURE_recency_days": 17.5479,
+            "FEATURE_purchase_order_count": 31.9885,
+            "FEATURE_total_gross_purchase_spend": 19890.8574,
+            "FEATURE_average_order_value": 522.4397,
+            "FEATURE_return_rate": 0.0,
+            "FEATURE_purchase_order_count_30d": 1.7331,
+            "FEATURE_purchase_order_count_90d": 5.5722,
+            "FEATURE_is_active_90d": 1.0,
+            "prob": 0.7067
+        }
+    },
+    "operating_parameters": {
+        "classification_threshold": 0.3,
+        "f1_optimal_reference_threshold": 0.275,
+        "targeting_cutoff_pct": 10,
+        "propensity_bands": {
+            "LOW": "<0.16",
+            "MODERATE": ">=0.16 and <0.27",
+            "HIGH": ">=0.27 and <0.40",
+            "VERY_HIGH": ">=0.40"
+        },
+        "status": "FROZEN",
+        "note": "Thresholds derived empirically from test/validation decile analysis."
+    },
+    "next_step": "Phase 2 - Segmentation Discovery",
+    "return_feature_integrity": {
+        "status": "EXPECTED_ZERO",
+        "finding": "Integrity check confirmed FEATURE_return_rate and FEATURE_return_line_count are exactly zero for all observations. Raw data analysis reveals that in the Online Retail II dataset, negative quantity transactions with Customer IDs ALWAYS have a 'C' prefix (cancellations). Transactions with negative quantities but no 'C' prefix (returns) only exist for guests (null Customer ID). Since temporal features only include identified customers, 'return' type transactions are naturally zero, and all refund behavior is captured in 'cancellation_line_count' and 'total_return_amount'. This is not a bug, but a semantic artifact of the raw data."
+    }
+}

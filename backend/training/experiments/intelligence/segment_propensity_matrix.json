@@ -1,0 +1,107 @@
+{
+    "status": "PHASE_3_COMPLETE",
+    "validation": {
+        "total_customers": 5247,
+        "unique_dates": 1,
+        "missing_segments": 0,
+        "missing_propensity": 0,
+        "date_mismatches": 0,
+        "duplicate_rows": 0
+    },
+    "segment_distribution": {
+        "Dormant Multi-Buyers": 32.914046121593294,
+        "One-Time Dormant": 32.113588717362305,
+        "Recent Repeat Buyers": 24.070897655803318,
+        "Active High-Value": 10.90146750524109
+    },
+    "propensity_distribution": {
+        "1_LOW": 62.35944349151896,
+        "2_MODERATE": 18.296169239565465,
+        "3_HIGH": 9.738898418143702,
+        "4_VERY_HIGH": 9.605488850771868
+    },
+    "matrix_raw_counts": {
+        "1_LOW": {
+            "Active High-Value": 5,
+            "Dormant Multi-Buyers": 1321,
+            "One-Time Dormant": 1683,
+            "Recent Repeat Buyers": 263
+        },
+        "2_MODERATE": {
+            "Active High-Value": 21,
+            "Dormant Multi-Buyers": 317,
+            "One-Time Dormant": 2,
+            "Recent Repeat Buyers": 620
+        },
+        "3_HIGH": {
+            "Active High-Value": 106,
+            "Dormant Multi-Buyers": 89,
+            "One-Time Dormant": 0,
+            "Recent Repeat Buyers": 316
+        },
+        "4_VERY_HIGH": {
+            "Active High-Value": 440,
+            "Dormant Multi-Buyers": 0,
+            "One-Time Dormant": 0,
+            "Recent Repeat Buyers": 64
+        }
+    },
+    "matrix_row_percentages": {
+        "1_LOW": {
+            "Active High-Value": 0.008741258741258742,
+            "Dormant Multi-Buyers": 0.7649102489866821,
+            "One-Time Dormant": 0.998813056379822,
+            "Recent Repeat Buyers": 0.2082343626286619
+        },
+        "2_MODERATE": {
+            "Active High-Value": 0.03671328671328671,
+            "Dormant Multi-Buyers": 0.18355529820497973,
+            "One-Time Dormant": 0.0011869436201780415,
+            "Recent Repeat Buyers": 0.4908946951702296
+        },
+        "3_HIGH": {
+            "Active High-Value": 0.1853146853146853,
+            "Dormant Multi-Buyers": 0.05153445280833816,
+            "One-Time Dormant": 0.0,
+            "Recent Repeat Buyers": 0.2501979414093428
+        },
+        "4_VERY_HIGH": {
+            "Active High-Value": 0.7692307692307693,
+            "Dormant Multi-Buyers": 0.0,
+            "One-Time Dormant": 0.0,
+            "Recent Repeat Buyers": 0.050673000791765635
+        }
+    },
+    "business_interpretation": {
+        "Active High-Value": "Concentrated in VERY_HIGH propensity. Naturally recurring, requires minimal discounting.",
+        "Recent Repeat Buyers": "Heterogeneous propensity. The propensity model effectively partitions this cohort into ready-to-buy vs needs-nurturing.",
+        "Dormant Multi-Buyers": "Low short-term propensity, but historically proven buyers. High-value reactivation target.",
+        "One-Time Dormant": "Almost entirely LOW propensity. Lowest priority for targeting budget."
+    },
+    "actual_purchase_rates": {
+        "Active High-Value": {
+            "1_LOW": 0.0,
+            "2_MODERATE": 0.19047619047619047,
+            "3_HIGH": 0.33962264150943394,
+            "4_VERY_HIGH": 0.7090909090909091
+        },
+        "Dormant Multi-Buyers": {
+            "1_LOW": 0.1105223315669947,
+            "2_MODERATE": 0.28391167192429023,
+            "3_HIGH": 0.39325842696629215,
+            "4_VERY_HIGH": null
+        },
+        "One-Time Dormant": {
+            "1_LOW": 0.0510992275698158,
+            "2_MODERATE": 0.5,
+            "3_HIGH": null,
+            "4_VERY_HIGH": null
+        },
+        "Recent Repeat Buyers": {
+            "1_LOW": 0.1444866920152091,
+            "2_MODERATE": 0.24838709677419354,
+            "3_HIGH": 0.40822784810126583,
+            "4_VERY_HIGH": 0.5625
+        }
+    }
+}

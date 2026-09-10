@@ -1,0 +1,46 @@
+{
+    "customer_count": 5247,
+    "recommendation_distribution": {
+        "No Action / Minimum Target": 1683,
+        "High-value reactivation / win-back": 1117,
+        "Standard engagement": 965,
+        "Targeted Nurture": 936,
+        "Light-touch cross-sell": 345,
+        "Proactive retention offer": 201
+    },
+    "confidence_distribution": {
+        "Low": 2638,
+        "High": 2300,
+        "Medium": 309
+    },
+    "evidence_status_distribution": {
+        "EVIDENCE_PRESENT": 2397,
+        "INSUFFICIENT_HISTORY": 1839,
+        "NO_ACTIVE_SIGNALS": 1011
+    },
+    "segment_distribution": {
+        "Dormant Multi-Buyers": 1727,
+        "One-Time Dormant": 1685,
+        "Recent Repeat Buyers": 1263,
+        "Active High-Value": 572
+    },
+    "propensity_band_distribution": {
+        "1_LOW": 3272,
+        "2_MODERATE": 960,
+        "3_HIGH": 511,
+        "4_VERY_HIGH": 504
+    },
+    "signal_prevalence": {
+        "recency_elevated": 1450,
+        "spend_declining": 2103,
+        "frequency_declining": 1335,
+        "return_risk": 0
+    },
+    "missing_evidence_count": 2850,
+    "fallback_recommendation_count": 0,
+    "invalid_recommendation_count": 0,
+    "duplicate_customer_count": 0,
+    "as_of_date_consistency": true,
+    "leakage_checks_passed": true,
+    "serialization_checks_passed": true
+}

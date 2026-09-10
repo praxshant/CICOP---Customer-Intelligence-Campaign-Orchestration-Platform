@@ -1,0 +1,51 @@
+{
+    "pipeline_version": "1.1.0",
+    "generation_timestamp": "2026-08-18T18:59:19.777395",
+    "observation_count": 71647,
+    "unique_customers": 5247,
+    "observation_date_range": [
+        "2010-03-31T00:00:00",
+        "2011-08-31T00:00:00"
+    ],
+    "train_date_range": [
+        "2010-03-31T00:00:00",
+        "2011-02-28T00:00:00"
+    ],
+    "val_date_range": [
+        "2011-03-31T00:00:00",
+        "2011-05-31T00:00:00"
+    ],
+    "test_date_range": [
+        "2011-06-30T00:00:00",
+        "2011-08-31T00:00:00"
+    ],
+    "train_rows": 41749,
+    "val_rows": 14468,
+    "test_rows": 15430,
+    "feature_count": 19,
+    "target_count": 15,
+    "churn_target": "DEFERRED - Lack of universal explicit churn signal without product context.",
+    "target_distributions": {
+        "TRAIN": {
+            "total_rows": 41749,
+            "next_purchase_30d_positives": 9783,
+            "next_purchase_30d_rate": 0.2343289659632566,
+            "next_purchase_60d_rate": 0.3609427770725047,
+            "next_purchase_90d_rate": 0.4414476993460921
+        },
+        "VALIDATION": {
+            "total_rows": 14468,
+            "next_purchase_30d_positives": 2573,
+            "next_purchase_30d_rate": 0.17784075200442356,
+            "next_purchase_60d_rate": 0.2829001935305502,
+            "next_purchase_90d_rate": 0.34462261542714956
+        },
+        "TEST": {
+            "total_rows": 15430,
+            "next_purchase_30d_positives": 2741,
+            "next_purchase_30d_rate": 0.17764095917044717,
+            "next_purchase_60d_rate": 0.2861957226182761,
+            "next_purchase_90d_rate": 0.38094620868438106
+        }
+    }
+}

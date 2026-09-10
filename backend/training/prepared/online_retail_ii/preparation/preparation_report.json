@@ -1,0 +1,16 @@
+{
+    "pipeline_version": "1.2",
+    "preparation_timestamp": "2026-08-18T02:12:55.993012",
+    "raw_row_count": 1067371,
+    "prepared_transaction_count": 1033031,
+    "customer_count": 5942,
+    "feature_customer_count": 5881,
+    "product_count": 5305,
+    "guest_transaction_count": 235146,
+    "purchase_count": 1010534,
+    "return_count": 3393,
+    "cancellation_count": 19104,
+    "duplicate_count_removed": 34335,
+    "feature_count": 21,
+    "validation_results": "ALL_PASSED"
+}
