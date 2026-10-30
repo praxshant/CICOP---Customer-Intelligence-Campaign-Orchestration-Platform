@@ -7,6 +7,8 @@ import numpy as np
 from datetime import datetime, timedelta
 import sys
 import os
+import tempfile
+from unittest.mock import patch
 
 # Add workspace root to path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -192,6 +194,17 @@ class TestDatabaseManager(unittest.TestCase):
         self.assertIn('customer_segments', stats)
         self.assertIn('campaigns', stats)
 
+    def test_sqlite_database_url_is_used_for_reads_and_writes(self):
+        """A configured SQLite URL must not silently fall back to the default DB."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = os.path.join(temp_dir, "configured.db")
+            with patch.dict(os.environ, {"DATABASE_URL": f"sqlite:///{db_path}"}):
+                configured_db = DatabaseManager()
+                configured_db.insert_dataframe(self.test_customers, "customers")
+
+                self.assertEqual(os.path.normcase(configured_db.db_path), os.path.normcase(db_path))
+                self.assertEqual(len(configured_db.query_to_dataframe("SELECT * FROM customers")), 2)
+
 def run_tests():
     # Step 1: Create test suite
     test_suite = unittest.TestSuite()
@@ -210,4 +223,4 @@ def run_tests():
 
 if __name__ == '__main__':
     success = run_tests()
-    sys.exit(0 if success else 1) 
+    sys.exit(0 if success else 1)

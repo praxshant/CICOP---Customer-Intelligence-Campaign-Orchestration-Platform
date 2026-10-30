@@ -1,182 +1,80 @@
 # Customer Intelligence & Campaign Orchestration Platform (CICOP)
 
-A full-stack customer intelligence system combining a **FastAPI backend**, **Streamlit dashboard**, **ML-powered segmentation & recommendations**, and a **business rules campaign engine**.
+CICOP is a Python customer-intelligence prototype with a Streamlit dashboard, a FastAPI service, a separate ML scoring service, deterministic campaign rules, and reproducible training artefacts.
 
----
+## What is currently wired
 
-## Quick Start
+```text
+Streamlit dashboard (:8501) ──reads/writes──> SQLite or PostgreSQL
+        │
+        └── POST /predict ──> API gateway (:8002) ──> ML server (:8001)
+
+FastAPI main service (:8000) ──> SQLite or PostgreSQL
+```
+
+The dashboard currently uses the shared data layer directly for dashboard, segmentation, and campaign screens. Its prediction demo is the only browser-to-service path: it calls the gateway, which proxies to the ML server. The authenticated FastAPI endpoints are available for API consumers, but are not the dashboard’s data source. This is intentional in the present prototype and should be changed to REST-only access before a multi-user deployment.
+
+## Quick start (Windows)
 
 ```powershell
-# 1. Create virtual environment and install dependencies
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-
-# 2. Copy environment file
 copy .env.example .env
 
-# 3. Initialise database and generate sample data
 python backend\scripts\setup_database.py
 python backend\scripts\generate_standalone_data.py
-
-# 4. Start all services (Windows)
 backend\scripts\start_all_services.cmd
 ```
 
-> **Linux/Mac:** use `bash backend/scripts/start_dev.sh`
-
----
-
-## Service URLs
+For Linux/macOS, use `bash backend/scripts/start_dev.sh` after installing the dependencies.
 
 | Service | URL |
 |---|---|
-| Streamlit Dashboard | http://localhost:8501 |
-| FastAPI Main | http://localhost:8000 |
-| Swagger Docs | http://localhost:8000/docs |
-| ML Model Server | http://localhost:8001 |
-| API Gateway | http://localhost:8002 |
+| Dashboard | http://localhost:8501 |
+| Main API / OpenAPI docs | http://localhost:8000 / http://localhost:8000/docs |
+| ML server | http://localhost:8001 |
+| Gateway | http://localhost:8002 |
 
----
+The ML server returns a clearly marked placeholder score when no model artefact has been deployed. Do not treat that fallback as a trained prediction.
 
-## Start Individual Services
+## Configuration
 
-```powershell
-# FastAPI main API
-uvicorn backend.api.main:app --host 0.0.0.0 --port 8000 --reload
-
-# ML Model Server
-uvicorn backend.ml.model_server:app --host 0.0.0.0 --port 8001 --reload
-
-# API Gateway
-uvicorn backend.api.gateway:app --host 0.0.0.0 --port 8002 --reload
-
-# Streamlit Dashboard
-streamlit run frontend\app.py --server.port=8501
-```
-
----
-
-## Repository Structure
-
-```
-Customer-Intelligence-Platform/
-├── backend/                    # All server-side Python code
-│   ├── api/                    # FastAPI application + gateway
-│   ├── auth/                   # JWT authentication
-│   ├── config/                 # YAML configs + CI/CD workflow
-│   ├── data/                   # Database manager, loader, preprocessor
-│   ├── ml/                     # Segmentation, recommendations, model server
-│   ├── models/                 # Serialised model artefacts
-│   ├── rules/                  # Campaign rules engine & orchestrator
-│   ├── scripts/                # Setup, ETL, training, migration scripts
-│   ├── tests/                  # pytest unit tests
-│   ├── utils/                  # Logger, config loader, helpers, validation
-│   └── workers/                # Celery async task workers
-│
-├── frontend/                   # Streamlit dashboard
-│   ├── app.py                  # Main multi-page application
-│   ├── components/             # KPI cards, charts, filters, sidebar
-│   └── utils/                  # Dashboard data aggregation
-│
-├── Dockerfile                  # Multi-stage Docker build
-├── requirements.txt            # Python dependencies
-├── .env                        # Local environment variables
-├── .env.example                # Environment template
-├── .gitignore
-├── TECHNICAL.md                # Full technical reference (17 sections)
-└── README.md                   # This file
-```
-
----
-
-## Technology Stack
-
-| Layer | Technology |
-|---|---|
-| Backend API | FastAPI + Uvicorn |
-| Frontend | Streamlit + Plotly |
-| ML | scikit-learn (K-Means, DBSCAN, GBM) |
-| Database | SQLite (default) / PostgreSQL |
-| Async Workers | Celery + Redis |
-| Authentication | JWT (python-jose) |
-| Containerisation | Docker |
-| CI/CD | GitHub Actions |
-
----
-
-## Features
-
-- **Customer 360 Data Foundation** — Comprehensive temporal feature engineering (recency, frequency, spend, returns).
-- **V1 Next-Purchase Propensity (Frozen)** — GradientBoosting model identifying customer purchase probability over the next 30 days.
-- **Behavioral Segmentation (Frozen)** — K-Means clustering isolating Dormant Multi-Buyers, Active High-Value, Recent Repeat Buyers, and One-Time Dormant cohorts.
-- **Segment × Propensity Intelligence (Phase 3)** — Combination matrix marrying short-term propensity with long-term behavioral segments.
-- **Deterministic Action Policy (Phase 4)** — Rules-based engine (no LLM) evaluating Segment, Propensity, and Behavioral Signals to generate deterministic recommendations and confidence scores.
-- *Note: Phase 4 is implemented as an independent experimental intelligence layer. Production API/Dashboard integration (Phase 5) is NOT yet implemented.*
-
-### Legacy Application Features (Pre-Phase 1)
-- **Interactive Dashboard** — KPI cards, trend charts, category/segment breakdown.
-- **Business Rules Engine** — Legacy campaign eligibility rules (untouched by Phase 4).
-- **REST API** — Full CRUD for customers, transactions, campaigns.
-
----
-
-## Environment Variables
-
-Copy `.env.example` to `.env` and configure:
+Copy `.env.example` and set at least the following values for your environment:
 
 ```env
 DATABASE_URL=sqlite:///backend/data/customer_insights.db
-JWT_SECRET_KEY=your-secret-key-here
 ML_SERVING_URL=http://localhost:8001
 GATEWAY_URL=http://localhost:8002
-MODEL_DIR=backend/models
 REDIS_URL=redis://localhost:6379/0
+JWT_SECRET_KEY=replace-this-before-deployment
 ```
 
-See `TECHNICAL.md` §4 for the full environment variable reference.
+Redis enables API rate limiting. When it is unavailable, the API starts and logs in safely without rate limiting; production deployments should run Redis. The main API also creates its `users` table at startup. Provision users through the authentication schema before using protected endpoints; no registration UI is included.
 
----
-
-## Running Tests
+## Tests
 
 ```powershell
-# From workspace root
-pytest backend/tests/ -v
-
-# With coverage
-pytest backend/tests/ -v --cov=backend --cov=frontend --cov-report=html
+pytest backend/tests -q
+python -m compileall -q backend frontend
 ```
 
----
+## Training and validation evidence
 
-## Docker
+The tracked notebooks, plots, and JSON reports in `backend/training/` are the source of truth for the following results:
 
-```bash
-# Build and run
-docker build --target base -t cicop:latest .
-docker run -p 8000:8000 -p 8501:8501 --env-file .env cicop:latest
-```
+- Data preparation processed 1,067,371 raw Online Retail II rows into 1,033,031 prepared transactions; all preparation checks passed.
+- The temporal dataset contains 71,647 observations across 5,247 customers (41,749 train / 14,468 validation / 15,430 test). Data foundation, leakage, target-window, split, and reproducibility gates all passed.
+- The selected 30-day next-purchase experiment is `HistGradientBoosting_Tuned`: test ROC-AUC **0.8191**, PR-AUC **0.5627**, Brier score **0.1098**, and Lift@10% **3.648**. Its operating threshold is 0.30; it is a frozen experimental result, not deployed by `backend/ml/model_server.py`.
+- Segmentation selected four operationally interpretable K-Means cohorts: Dormant Multi-Buyers (32.91%), Active High-Value (10.90%), Recent Repeat Buyers (24.07%), and One-Time Dormant (32.11%). The phase-2 report remains marked as awaiting human review.
+- Phase 3’s segment × propensity matrix and Phase 4’s deterministic action-policy validation are complete. Phase 4 produced valid recommendations for all 5,247 scored customers, with no duplicate customer rows, fallback recommendations, or serialization failures.
 
----
+These reports use historical retail data and are not equivalent to an online production evaluation. The training intelligence layers are not yet integrated into the deployed dashboard/API workflow.
 
-## Full Technical Documentation
+## Repository hygiene
 
-See **[TECHNICAL.md](./TECHNICAL.md)** for detailed coverage of:
-1. Project overview
-2. Repository structure
-3. Technology stack
-4. Environment variables
-5. Service architecture
-6. Database schema
-7. API endpoints
-8. ML pipeline
-9. Business rules engine
-10. Authentication
-11. Configuration system
-12. Logging
-13. Development setup
-14. Testing
-15. Deployment
-16. Data pipeline
-17. Known issues & limitations
+Source code, configurations, tests, notebooks, validation reports, and visual training artefacts are tracked. Local databases, raw datasets, model binaries, logs, exports, caches, and secrets are intentionally ignored by Git. Do not commit `.env`, generated databases, raw source data, model artefacts, logs, or `__pycache__` directories.
+
+## Further detail
+
+See [TECHNICAL.md](TECHNICAL.md) for architecture, endpoint, audit, and training-report details.

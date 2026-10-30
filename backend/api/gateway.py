@@ -3,15 +3,18 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import httpx
+from dotenv import load_dotenv
 from fastapi.responses import Response
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
+load_dotenv()
+
 app = FastAPI(title="CICOP API Gateway", version="0.1.0")
 
-# CORS
+# CORS: credentialed browser requests require explicit origins, not "*".
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=os.getenv("ALLOWED_ORIGINS", "http://localhost:8501").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

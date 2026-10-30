@@ -6,9 +6,8 @@ import pandas as pd
 from typing import List, Dict, Any, Optional
 import os
 from contextlib import contextmanager
+from dotenv import load_dotenv
 from backend.utils.logger import setup_logger
-import os
-import re
 try:
     import psycopg2
     import psycopg2.extras
@@ -18,6 +17,8 @@ try:
     from sqlalchemy import create_engine
 except Exception:
     create_engine = None
+
+load_dotenv()
 
 class DatabaseManager:
     def __init__(self, db_path: str = "backend/data/customer_insights.db"):
@@ -35,12 +36,15 @@ class DatabaseManager:
                 self.database_url = f"sqlite:///{db_path}"
         self.db_type = self._determine_db_type()
 
-        # Backward-compat: expose db_path and persistent connection for prior code paths
-        self.db_path = db_path if not env_url else (db_path if self.db_type == "sqlite" else db_path)
+        # Keep the concrete SQLite path in sync with DATABASE_URL.  Previously
+        # schema creation used DATABASE_URL while normal reads and writes used
+        # the constructor default path, splitting one configured database into
+        # two files.
+        self.db_path = self._sqlite_path_from_url(self.database_url) if self.db_type == "sqlite" else db_path
 
         # Create directory for SQLite file DBs
         if self.db_type == "sqlite":
-            real_path = self.database_url.replace("sqlite:///", "").replace("sqlite://", "")
+            real_path = self.db_path
             db_dir = os.path.dirname(real_path)
             if real_path not in (":memory:", "") and db_dir:
                 os.makedirs(db_dir, exist_ok=True)
@@ -57,6 +61,15 @@ class DatabaseManager:
             return "postgresql"
         return "sqlite"
 
+    @staticmethod
+    def _sqlite_path_from_url(database_url: str) -> str:
+        """Return the filesystem path represented by a SQLite SQLAlchemy URL."""
+        if database_url == "sqlite:///:memory:":
+            return ":memory:"
+        if not database_url.startswith("sqlite:///"):
+            raise ValueError(f"Unsupported SQLite database URL: {database_url}")
+        return database_url[len("sqlite:///"):]
+
     @contextmanager
     def _get_connection(self):
         """Context manager that yields a DB-API connection for the configured backend."""
@@ -70,8 +83,7 @@ class DatabaseManager:
                 if self._persistent_conn is not None:
                     conn = self._persistent_conn
                 else:
-                    real_path = self.database_url.replace("sqlite:///", "").replace("sqlite://", "")
-                    conn = sqlite3.connect(real_path, timeout=30, check_same_thread=False)
+                    conn = sqlite3.connect(self.db_path, timeout=30, check_same_thread=False)
                     conn.row_factory = sqlite3.Row
             yield conn
         finally:
@@ -143,6 +155,24 @@ class DatabaseManager:
                         FOREIGN KEY (customer_id) REFERENCES customers (customer_id)
                     )
                 """)
+
+                # Authentication is optional for the dashboard, but the API
+                # must always have the table its JWT dependency queries.
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS users (
+                        user_id TEXT PRIMARY KEY,
+                        username TEXT UNIQUE NOT NULL,
+                        email TEXT UNIQUE NOT NULL,
+                        password_hash TEXT NOT NULL,
+                        role TEXT NOT NULL DEFAULT 'viewer',
+                        is_active BOOLEAN DEFAULT TRUE,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        last_login TIMESTAMP,
+                        failed_login_attempts INTEGER DEFAULT 0,
+                        locked_until TIMESTAMP
+                    )
+                """)
                 
                 # Create indexes for better performance
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_transactions_customer_id ON transactions(customer_id)")
@@ -150,6 +180,7 @@ class DatabaseManager:
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category)")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_customers_email ON customers(email)")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_customers_location ON customers(location)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)")
                 
                 conn.commit()
                 return
@@ -205,12 +236,28 @@ class DatabaseManager:
                     FOREIGN KEY (customer_id) REFERENCES customers (customer_id)
                 )
             """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    user_id TEXT PRIMARY KEY,
+                    username TEXT UNIQUE NOT NULL,
+                    email TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    role TEXT NOT NULL DEFAULT 'viewer',
+                    is_active BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_login TIMESTAMP,
+                    failed_login_attempts INTEGER DEFAULT 0,
+                    locked_until TIMESTAMP
+                )
+            """)
             # Indexes
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_transactions_customer_id ON transactions(customer_id)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(transaction_date)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_customers_email ON customers(email)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_customers_location ON customers(location)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)")
             conn.commit()
     
     def insert_dataframe(self, df: pd.DataFrame, table_name: str, if_exists: str = "replace"):
@@ -222,7 +269,7 @@ class DatabaseManager:
             df.to_sql(table_name, engine, if_exists=if_exists, index=False, method='multi')
             self.logger.info(f"Inserted {len(df)} records into {table_name}")
             return
-        with (self._persistent_conn if self._persistent_conn else sqlite3.connect(self.db_path)) as conn:
+        with self._get_connection() as conn:
             df.to_sql(table_name, conn, if_exists=if_exists, index=False)
             self.logger.info(f"Inserted {len(df)} records into {table_name}")
     
@@ -231,7 +278,7 @@ class DatabaseManager:
         if self.db_type == "postgresql":
             with self._get_connection() as conn:
                 return pd.read_sql_query(query.replace('?', '%s'), conn, params=params)
-        with (self._persistent_conn if self._persistent_conn else sqlite3.connect(self.db_path)) as conn:
+        with self._get_connection() as conn:
             df = pd.read_sql_query(query, conn, params=params)
             return df
     
@@ -247,7 +294,7 @@ class DatabaseManager:
                     rows = cursor.fetchall()
                     return rows
                 return cursor.rowcount
-        with (self._persistent_conn if self._persistent_conn else sqlite3.connect(self.db_path)) as conn:
+        with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, params or ())
             conn.commit()
@@ -312,4 +359,4 @@ class DatabaseManager:
             except Exception:
                 stats[table] = 0
         
-        return stats 
+        return stats

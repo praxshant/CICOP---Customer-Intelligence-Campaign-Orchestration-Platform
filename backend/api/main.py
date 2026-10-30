@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, status, Request
+from fastapi import FastAPI, HTTPException, Depends, Response, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
@@ -28,20 +28,24 @@ from backend.utils.json_encoder import convert_numpy_types
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: initialize rate limiter
+    # Startup: initialise the optional Redis-backed rate limiter.  Local
+    # development must remain usable when Redis is not running.
     redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    rate_limit_redis = None
+    app.state.rate_limiting_enabled = False
     try:
-        r = redis.from_url(redis_url, encoding="utf-8", decode_responses=True)
-        await FastAPILimiter.init(r)
+        rate_limit_redis = redis.from_url(redis_url, encoding="utf-8", decode_responses=True)
+        await rate_limit_redis.ping()
+        await FastAPILimiter.init(rate_limit_redis)
+        app.state.rate_limiting_enabled = True
     except Exception:
-        # Proceed without limiter if redis not available
-        pass
+        # Proceed without rate limiting if Redis is unavailable.
+        if rate_limit_redis is not None:
+            await rate_limit_redis.aclose()
     yield
     # Shutdown
-    try:
+    if app.state.rate_limiting_enabled:
         await FastAPILimiter.close()
-    except Exception:
-        pass
 
 # Configure debug logging to stdout
 logging.basicConfig(
@@ -56,7 +60,7 @@ app = FastAPI(
     description="Customer Intelligence & Campaign Orchestration Platform API",
     version="1.0.0",
     lifespan=lifespan,
-    debug=True,
+    debug=os.getenv("DEBUG", "false").lower() == "true",
 )
 
 # Security middlewares
@@ -98,8 +102,18 @@ _db: Optional[DatabaseManager] = None
 _seg: Optional[CustomerSegmentation] = None
 _campaigns: Optional[CampaignGenerator] = None
 
-# Rate limiter dependency default
-rate_limiter = RateLimiter(times=int(os.getenv("RATE_LIMIT_PER_MINUTE", "100")), seconds=60)
+async def _apply_rate_limit(request: Request, response: Response, times: int) -> None:
+    """Apply a Redis rate limit only when the limiter started successfully."""
+    if getattr(request.app.state, "rate_limiting_enabled", False):
+        await RateLimiter(times=times, seconds=60)(request, response)
+
+
+async def rate_limiter(request: Request, response: Response) -> None:
+    await _apply_rate_limit(request, response, int(os.getenv("RATE_LIMIT_PER_MINUTE", "100")))
+
+
+async def login_rate_limiter(request: Request, response: Response) -> None:
+    await _apply_rate_limit(request, response, 5)
 
 
 @app.on_event("startup")
@@ -173,7 +187,7 @@ async def root():
         "message": "CICOP API is running",
         "version": "1.0.0",
         "docs": "/docs",
-        "debug": True,
+        "debug": app.debug,
     }
 
 
@@ -225,7 +239,7 @@ async def health_check():
 
 # Authentication endpoints
 @app.post("/auth/login", response_model=TokenResponse)
-async def login(login_data: LoginRequest, _: None = Depends(RateLimiter(times=5, seconds=60))):
+async def login(login_data: LoginRequest, _: None = Depends(login_rate_limiter)):
     user = auth_manager.authenticate_user(login_data.username, login_data.password)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")

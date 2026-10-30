@@ -5,8 +5,11 @@ from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import numpy as np
 import os
+from dotenv import load_dotenv
 import joblib
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+
+load_dotenv()
 
 app = FastAPI(title="CICOP ML Model Server", version="0.2.0")
 

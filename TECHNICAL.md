@@ -2459,3 +2459,63 @@ Tests cover:
 | Phase 4.1 — Quality Freeze | FROZEN |
 | Phase 5 — Production API Integration | NOT STARTED |
 | Phase 6 — Dashboard Integration | NOT STARTED |
+
+---
+
+## 26. Repository and Integration Audit (2026-10-30)
+
+This section supersedes earlier architecture statements that imply the Streamlit dashboard consumes the main FastAPI endpoints. It records the checked repository state and the tracked training evidence.
+
+### 26.1 Git and repository hygiene
+
+- `main` is configured with `origin` pointing to `https://github.com/praxshant/CICOP---Customer-Intelligence-Campaign-Orchestration-Platform.git`.
+- The tracked tree contains source, configuration, tests, notebooks, JSON validation reports, and training plots. No generated cache, local database, raw dataset, model binary, secret, or log file is tracked.
+- `.gitignore` intentionally excludes `.env`, SQLite files, raw tabular data, model artefacts, exports, logs, Python bytecode, and test caches. These files were retained locally because they are runtime or training inputs, not source files to delete.
+- `requirements.txt` now contains only direct runtime/test dependencies used by the tracked Python modules. Removed entries included unused heavyweight data, NLP, geospatial, deep-learning, dashboard, and experimentation libraries. `PyJWT`, `fastapi-limiter`, and `python-dotenv` are explicitly declared because the application imports them.
+
+### 26.2 Actual frontend/backend wiring
+
+```text
+Streamlit (:8501) ──direct Python data layer──> DatabaseManager ──> SQLite/PostgreSQL
+       │
+       └── requests.post(GATEWAY_URL + "/predict") ──> Gateway (:8002)
+                                                       └──> ML server (:8001)
+
+Main API (:8000) ──authenticated REST routes──> DatabaseManager ──> SQLite/PostgreSQL
+```
+
+The dashboard calls the gateway only for the model-prediction demo. Dashboard pages otherwise import backend modules and query the database directly; the main API is not the dashboard's data source. This is functional for local single-process development but is not an API-only production boundary. The current ML server returns a labelled placeholder score when a deployed model is absent; the notebook-trained next-purchase model is not deployed to it.
+
+### 26.3 Defects corrected in this audit
+
+| Finding | Correction | Verification |
+|---|---|---|
+| SQLite `DATABASE_URL` initialized one file but reads/writes used the default path | `DatabaseManager` derives `db_path` from the SQLite URL and consistently uses its connection manager | Regression test writes/reads a temporary configured SQLite URL |
+| API login crashed without Redis because the failed limiter initialization left a live Redis client behind | Redis is pinged before limiter initialization; rate limiting is skipped only when Redis is unavailable | API smoke test confirms an invalid login returns 401 rather than 500 without Redis |
+| API login queried a missing `users` table on a fresh database | Database initialization creates `users` and its username index | API smoke test and database initialization |
+| Credentialed gateway CORS used wildcard origins | Gateway reads explicit `ALLOWED_ORIGINS`; the example environment defines the local Streamlit origin | Static configuration review |
+| `.env.example` suggested configuration that services did not load | Service entry modules now load `.env`; the dependency is declared | Import/compile verification |
+
+Authentication still has no registration/provisioning endpoint. The schema is initialized automatically, but a deployment must provision users before calling protected routes.
+
+### 26.4 Training reports reviewed
+
+| Stage | Evidence | Result |
+|---|---|---|
+| Preparation | `preparation_report.json` | 1,067,371 raw rows; 1,033,031 prepared transactions; 5,942 customers; all checks passed |
+| Temporal dataset | `temporal_report.json`, `validation_report.json` | 71,647 observations across 5,247 customers; 41,749/14,468/15,430 train/validation/test rows; all foundation, leakage, target-window, split, and reproducibility gates passed |
+| 30-day propensity | `evaluation_report.json`, `model_audit_report.json` | Selected `HistGradientBoosting_Tuned`; test ROC-AUC 0.8191, PR-AUC 0.5627, Brier 0.1098, Lift@10% 3.648; threshold 0.30 is frozen |
+| Segmentation | `segmentation_validation_report.json` | Four K-Means cohorts selected for operational interpretation; phase-2 report remains awaiting human review |
+| Segment × propensity | `segment_propensity_matrix.json` | Phase 3 complete for 5,247 customers with zero missing/duplicate rows |
+| Action policy | `phase4_validation_report.json` | Valid recommendations for all 5,247 customers; zero fallback, invalid, duplicate, serialization, and leakage-check failures |
+
+The application logs show successful legacy data generation, segmentation, campaign generation, recommendation matrix creation, and automated test runs. An early Windows console encoding error in `DatabaseSetup_20260817.log` was resolved in the later setup run by using a UTF-8 console. Logs are local operational artefacts and intentionally remain untracked.
+
+### 26.5 Validation commands
+
+```powershell
+pytest backend/tests -q
+python -m compileall -q backend frontend
+```
+
+The tested environment reports 37 passing tests after the added database and API smoke coverage. Windows may still report non-failing warnings from pytest cache permissions and scikit-learn's MKL threading advisory.
