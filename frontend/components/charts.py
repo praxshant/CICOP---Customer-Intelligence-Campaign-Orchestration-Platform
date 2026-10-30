@@ -18,8 +18,9 @@ def render_spending_chart(transactions_df: pd.DataFrame):
         return
     
     # Step 2: Prepare data for time series
-    transactions_df['transaction_date'] = pd.to_datetime(transactions_df['transaction_date'])
-    daily_spending = transactions_df.groupby('transaction_date')['amount'].sum().reset_index()
+    chart_data = transactions_df.copy()
+    chart_data['transaction_date'] = pd.to_datetime(chart_data['transaction_date'])
+    daily_spending = chart_data.groupby('transaction_date')['amount'].sum().reset_index()
     
     # Step 3: Create time series chart
     fig = px.line(
@@ -37,7 +38,7 @@ def render_spending_chart(transactions_df: pd.DataFrame):
         showlegend=False
     )
     
-    st.plotly_chart(fig, width='stretch')
+    st.plotly_chart(fig, use_container_width=True)
 
 def render_segment_chart(customers_df: pd.DataFrame):
     # Step 1: Customer segmentation chart
@@ -49,21 +50,24 @@ def render_segment_chart(customers_df: pd.DataFrame):
     
     # Step 2: Prepare segment data
     segment_counts = customers_df['segment_name'].value_counts()
+    segment_data = segment_counts.rename_axis('segment_name').reset_index(name='customer_count')
     
-    # Step 3: Create pie chart
+    # A bar chart keeps long labels legible and makes skew visible.
     colors = generate_color_palette(len(segment_counts))
     
-    fig = px.pie(
-        values=segment_counts.values,
-        names=segment_counts.index,
-        title="Customer Distribution by Segment",
-        color_discrete_sequence=colors
+    fig = px.bar(
+        segment_data,
+        x='customer_count',
+        y='segment_name',
+        orientation='h',
+        title="Stored customer segments",
+        color='segment_name',
+        color_discrete_sequence=colors,
+        labels={'customer_count': 'Customers', 'segment_name': 'Segment'},
     )
+    fig.update_layout(height=300, showlegend=False)
     
-    fig.update_layout(height=300)
-    fig.update_traces(textposition='inside', textinfo='percent+label')
-    
-    st.plotly_chart(fig, width='stretch')
+    st.plotly_chart(fig, use_container_width=True)
 
 def render_category_chart(transactions_df: pd.DataFrame):
     # Step 1: Category spending chart
@@ -97,7 +101,7 @@ def render_category_chart(transactions_df: pd.DataFrame):
     
     fig.update_xaxes(tickangle=45)
     
-    st.plotly_chart(fig, width='stretch')
+    st.plotly_chart(fig, use_container_width=True)
 
 def render_merchant_chart(transactions_df: pd.DataFrame, top_n: int = 10):
     # Step 1: Top merchants chart
@@ -128,7 +132,7 @@ def render_merchant_chart(transactions_df: pd.DataFrame, top_n: int = 10):
         showlegend=False
     )
     
-    st.plotly_chart(fig, width='stretch')
+    st.plotly_chart(fig, use_container_width=True)
 
 def render_customer_value_chart(customer_features_df: pd.DataFrame):
     # Step 1: Customer value distribution chart
@@ -153,7 +157,7 @@ def render_customer_value_chart(customer_features_df: pd.DataFrame):
         height=300
     )
     
-    st.plotly_chart(fig, width='stretch')
+    st.plotly_chart(fig, use_container_width=True)
 
 def render_recency_frequency_chart(customer_features_df: pd.DataFrame):
     # Step 1: Recency-Frequency chart
@@ -185,7 +189,7 @@ def render_recency_frequency_chart(customer_features_df: pd.DataFrame):
         height=400
     )
     
-    st.plotly_chart(fig, width='stretch')
+    st.plotly_chart(fig, use_container_width=True)
 
 def render_campaign_performance_chart(campaigns_df: pd.DataFrame):
     # Step 1: Campaign performance chart
@@ -225,7 +229,7 @@ def render_campaign_performance_chart(campaigns_df: pd.DataFrame):
         height=400
     )
     
-    st.plotly_chart(fig, width='stretch')
+    st.plotly_chart(fig, use_container_width=True)
 
 def render_monthly_trends_chart(transactions_df: pd.DataFrame):
     # Step 1: Monthly trends chart
@@ -277,4 +281,4 @@ def render_monthly_trends_chart(transactions_df: pd.DataFrame):
     
     fig.update_layout(height=500, showlegend=True)
     
-    st.plotly_chart(fig, width='stretch')
+    st.plotly_chart(fig, use_container_width=True)

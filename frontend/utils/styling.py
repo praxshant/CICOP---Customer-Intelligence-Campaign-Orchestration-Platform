@@ -8,27 +8,25 @@ def apply_custom_css():
     # Step 1: Apply custom CSS styling
     custom_css = """
     <style>
-    /* Main container styling */
+    /* Keep the interface readable in either the Streamlit light or dark theme. */
     .main .block-container {
-        padding-top: 2rem;
+        max-width: 1500px;
+        padding-top: 1.5rem;
         padding-bottom: 2rem;
     }
     
     /* Header styling */
     h1 {
-        color: #1f77b4;
         font-weight: bold;
         margin-bottom: 1rem;
     }
     
     h2 {
-        color: #2c3e50;
         font-weight: 600;
         margin-bottom: 0.8rem;
     }
     
     h3 {
-        color: #34495e;
         font-weight: 500;
         margin-bottom: 0.6rem;
     }
@@ -51,9 +49,15 @@ def apply_custom_css():
         margin: 1rem 0;
     }
     
-    /* Sidebar styling */
-    .css-1d391kg {
-        background-color: #f8f9fa;
+    [data-testid="stMetric"] {
+        border: 1px solid rgba(128, 128, 128, 0.25);
+        border-radius: 0.75rem;
+        padding: 0.8rem;
+        min-height: 8rem;
+    }
+
+    [data-testid="stMetricValue"] {
+        font-size: clamp(1.35rem, 2vw, 2.2rem);
     }
     
     /* Button styling */
@@ -403,4 +407,4 @@ def create_data_table(data: Dict[str, Any], title: str = None):
     </div>
     """
     
-    return table_html 
+    return table_html

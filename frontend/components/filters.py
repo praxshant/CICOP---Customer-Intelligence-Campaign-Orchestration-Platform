@@ -5,8 +5,6 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 from typing import Tuple, List, Optional
-from backend.utils.helpers import calculate_date_range
-
 def render_filters(transactions_df: pd.DataFrame, customers_df: pd.DataFrame) -> Tuple[Optional[Tuple[datetime, datetime]], List[str], List[str]]:
     # Step 1: Create filters section
     st.subheader("🔍 Filters")
@@ -14,7 +12,7 @@ def render_filters(transactions_df: pd.DataFrame, customers_df: pd.DataFrame) ->
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        date_range = render_date_filter()
+        date_range = render_date_filter(transactions_df)
     
     with col2:
         selected_categories = render_category_filter(transactions_df)
@@ -24,10 +22,20 @@ def render_filters(transactions_df: pd.DataFrame, customers_df: pd.DataFrame) ->
     
     return date_range, selected_categories, selected_segments
 
-def render_date_filter() -> Optional[Tuple[datetime, datetime]]:
+def render_date_filter(transactions_df: pd.DataFrame) -> Optional[Tuple[datetime, datetime]]:
     # Step 1: Date range filter
     st.write("**Date Range**")
     
+    valid_dates = pd.to_datetime(transactions_df.get('transaction_date'), errors='coerce').dropna()
+    if valid_dates.empty:
+        st.info("No transaction dates available")
+        return None
+
+    # Anchor quick filters to the newest record, not the machine clock. This keeps
+    # historical sample data usable after the data-generation date has passed.
+    end_date = valid_dates.max().to_pydatetime()
+    start_bound = valid_dates.min().to_pydatetime()
+
     # Step 2: Quick date options
     date_option = st.selectbox(
         "Select Date Range",
@@ -37,26 +45,22 @@ def render_date_filter() -> Optional[Tuple[datetime, datetime]]:
     
     # Step 3: Handle date selection
     if date_option == "Custom":
-        start_date = st.date_input("Start Date", value=datetime.now() - timedelta(days=30))
-        end_date = st.date_input("End Date", value=datetime.now())
+        start_date = st.date_input("Start Date", value=max(start_bound, end_date - timedelta(days=30)), min_value=start_bound, max_value=end_date)
+        selected_end_date = st.date_input("End Date", value=end_date, min_value=start_bound, max_value=end_date)
         return (datetime.combine(start_date, datetime.min.time()), 
-                datetime.combine(end_date, datetime.max.time()))
+                datetime.combine(selected_end_date, datetime.max.time()))
     
     elif date_option == "Last 7 days":
-        start_date, end_date = calculate_date_range("7d")
-        return (start_date, end_date)
+        return (end_date - timedelta(days=7), end_date)
     
     elif date_option == "Last 30 days":
-        start_date, end_date = calculate_date_range("30d")
-        return (start_date, end_date)
+        return (end_date - timedelta(days=30), end_date)
     
     elif date_option == "Last 90 days":
-        start_date, end_date = calculate_date_range("90d")
-        return (start_date, end_date)
+        return (end_date - timedelta(days=90), end_date)
     
     elif date_option == "Last 1 year":
-        start_date, end_date = calculate_date_range("1y")
-        return (start_date, end_date)
+        return (end_date - timedelta(days=365), end_date)
     
     else:  # All time
         return None
@@ -273,4 +277,4 @@ def render_filter_summary(active_filters: dict):
         
         # Step 2: Clear filters button
         if st.button("🗑️ Clear All Filters"):
-            st.rerun() 
+            st.rerun()

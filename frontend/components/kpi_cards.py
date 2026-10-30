@@ -39,12 +39,15 @@ def render_revenue_card(kpi_data: Dict[str, Any]):
         delta_color = "off"
     
     # Step 3: Create card
+    compact_value = f"${total_revenue / 1_000_000:.2f}M" if abs(total_revenue) >= 1_000_000 else format_currency(total_revenue)
     st.metric(
         label="💰 Total Revenue",
-        value=format_currency(total_revenue),
+        value=compact_value,
         delta=f"{trend_icon} {revenue_change:.1f}%",
         delta_color=delta_color
     )
+    if abs(total_revenue) >= 1_000_000:
+        st.caption(f"Exact: {format_currency(total_revenue)}")
 
 def render_transactions_card(kpi_data: Dict[str, Any]):
     # Step 1: Transactions KPI card
@@ -161,4 +164,4 @@ def render_campaign_kpi_cards(campaign_data: pd.DataFrame):
             label="💵 Potential Revenue",
             value=format_currency(total_potential_revenue),
             delta=None
-        ) 
+        )

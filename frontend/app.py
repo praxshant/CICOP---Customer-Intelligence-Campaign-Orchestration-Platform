@@ -32,6 +32,7 @@ from frontend.components.kpi_cards import render_kpi_cards
 from frontend.components.charts import render_spending_chart, render_segment_chart, render_category_chart
 from frontend.components.filters import render_filters
 from frontend.components.sidebar import render_sidebar
+from frontend.utils.styling import apply_custom_css
 
 class DashboardApp:
     def __init__(self):
@@ -105,7 +106,9 @@ class DashboardApp:
     
     def render_dashboard(self):
         # Step 1: Load data if not already loaded
-        if not st.session_state.data_loaded:
+        # DashboardApp is recreated on every Streamlit rerun, so instance fields
+        # must be restored even when a previous run marked data as loaded.
+        if not st.session_state.data_loaded or not hasattr(self, 'transactions_df'):
             self.load_data()
         # Safety guard: ensure required attributes exist and contain data
         if not hasattr(self, 'transactions_df') or not hasattr(self, 'customers_df'):
@@ -118,11 +121,9 @@ class DashboardApp:
             st.warning("No data available. Please run the ETL pipeline first.")
             return
         
-        # Step 2: Render sidebar
-        render_sidebar()
-        
-        # Step 3: Main dashboard layout
-        st.title("📊 Customer Spending Insights Dashboard")
+        # Step 2: Main dashboard layout
+        st.title("Customer intelligence overview")
+        st.caption("Explore stored sample transactions, rule-based segments, and campaign records.")
         
         # Step 4: Render filters
         date_range, selected_categories, selected_segments = render_filters(
@@ -134,14 +135,11 @@ class DashboardApp:
             self.transactions_df, date_range, selected_categories, selected_segments
         )
         
-        # Step 6: Handle quick actions from sidebar (segmentation/export/report)
-        self._handle_quick_actions(filtered_transactions)
-
-        # Step 7: Render KPI cards
+        # Step 6: Render KPI cards
         kpi_data = self.calculate_kpis(filtered_transactions, date_range)
         render_kpi_cards(kpi_data)
         
-        # Step 8: Render charts
+        # Step 7: Render charts
         col1, col2 = st.columns(2)
         
         with col1:
@@ -152,7 +150,7 @@ class DashboardApp:
             render_segment_chart(self.customers_df)
             self.render_recommendations_chart()
         
-        # Step 9: Render data tables
+        # Step 8: Render data tables
         self.render_data_tables(filtered_transactions)
 
     def _handle_quick_actions(self, filtered_transactions: pd.DataFrame):
@@ -245,9 +243,10 @@ class DashboardApp:
         # Step 1: Apply date filter
         if date_range:
             start_date, end_date = date_range
+            dates = pd.to_datetime(transactions_df['transaction_date'], errors='coerce')
             transactions_df = transactions_df[
-                (transactions_df['transaction_date'] >= start_date) &
-                (transactions_df['transaction_date'] <= end_date)
+                (dates >= pd.Timestamp(start_date)) &
+                (dates <= pd.Timestamp(end_date))
             ]
         
         # Step 2: Apply category filter
@@ -310,7 +309,8 @@ class DashboardApp:
     
     def render_recommendations_chart(self):
         # Step 1: Render recommendations chart
-        st.subheader("🎯 Top Recommendations")
+        st.subheader("Category affinity signals")
+        st.caption("Legacy category-similarity scores for high-spend customers; not individual product recommendations.")
         
         if not self.transactions_df.empty and not self.customer_features_df.empty:
             # Prepare recommendation engine (create matrix and similarity if needed)
@@ -400,12 +400,12 @@ class DashboardApp:
             else:
                 st.info("No campaign data available")
 
-        # Step 9: Render model prediction demo
-        self.render_model_prediction_demo()
+        with st.expander("Developer: ML service connectivity", expanded=False):
+            self.render_model_prediction_demo()
 
     def render_model_prediction_demo(self):
-        st.subheader("🤖 Model Prediction Demo")
-        st.caption("Send a sample feature vector to the API Gateway which forwards to the ML Model Server.")
+        st.subheader("ML service connectivity test")
+        st.caption("Sends a manual feature vector through the API gateway. It is not part of the customer dashboard workflow.")
 
         gateway_url = os.getenv("GATEWAY_URL", "http://localhost:8002")
         colA, colB = st.columns([3, 1])
@@ -422,7 +422,12 @@ class DashboardApp:
                 features = [float(x.strip()) for x in features_text.split(',') if x.strip()]
                 resp = requests.post(f"{gateway_url}/predict", json={"features": features}, timeout=10)
                 if resp.ok:
-                    st.success(resp.json())
+                    result = resp.json()
+                    if result.get("placeholder"):
+                        st.warning("No trained model is loaded. This is a deterministic placeholder score, not a customer prediction.")
+                    else:
+                        st.success("Model response received.")
+                    st.json(result)
                 else:
                     st.error(f"Gateway error {resp.status_code}: {resp.text}")
             except Exception as e:
@@ -523,9 +528,9 @@ def campaign_management_page():
         return
     tab1, tab2, tab3 = st.tabs(["Generate Campaigns", "Active Campaigns", "Campaign Analytics"])
     with tab1:
-        st.subheader("Generate New Campaigns")
+        st.subheader("Generate rule-matched campaign candidates")
+        st.info("Campaign rules choose eligible offer types from customer behaviour. The results are planning candidates, not sent campaigns or measured financial results.")
         with st.form("campaign_form"):
-            campaign_type = st.selectbox("Campaign Type", ["loyalty_reward", "win_back", "cross_sell", "seasonal_promotion"])
             if segments_df is not None and not segments_df.empty:
                 available_segments = segments_df['segment_name'].unique().tolist()
                 target_segments = st.multiselect("Target Segments", available_segments)
@@ -535,19 +540,21 @@ def campaign_management_page():
             submitted = st.form_submit_button("Generate Campaigns")
             if submitted and target_segments:
                 try:
+                    features_df = DataPreprocessor().create_customer_features(transactions_df)
                     all_campaigns = []
                     for segment in target_segments:
-                        seg_customers = customers_df[customers_df['customer_id'].isin(segments_df[segments_df['segment_name'] == segment]['customer_id'])]
-                        if not seg_customers.empty:
-                            cdf = campaign_generator.generate_campaigns_for_segment(segment, seg_customers, seg_customers)
+                        if not features_df.empty:
+                            cdf = campaign_generator.generate_campaigns_for_segment(segment, customers_df, features_df)
                             if not cdf.empty:
                                 all_campaigns.extend(cdf.to_dict('records'))
                     if all_campaigns:
                         optimization = campaign_generator.optimize_campaign_portfolio(pd.DataFrame(all_campaigns), budget)
                         sel = optimization['selected_campaigns']
                         st.success(f"Generated {len(sel)} optimized campaigns")
-                        st.write(f"**Budget Used:** ${optimization['total_budget_used']:.2f}")
-                        st.write(f"**Expected ROI:** {optimization['expected_roi']:.2f}")
+                        col1, col2 = st.columns(2)
+                        col1.metric("Estimated discount cost", f"${optimization['total_budget_used']:,.2f}")
+                        col2.metric("Portfolio priority score", f"{optimization['priority_score_total']:,.1f}")
+                        st.caption("Priority score ranks rule-matched candidates; it is not expected revenue, conversion, or ROI.")
                         if sel:
                             st.dataframe(pd.DataFrame(sel), use_container_width=True)
                     else:
@@ -563,11 +570,10 @@ def campaign_management_page():
                 with c1:
                     st.metric("Active Campaigns", int(len(active)))
                 with c2:
-                    total_discount = float(active.get('discount_amount', pd.Series([0]*len(active))).sum())
-                    st.metric("Total Discount", f"${total_discount:.2f}")
+                    st.metric("Campaign records", int(len(campaigns_df)))
                 with c3:
                     avg_discount = float(active.get('discount_amount', pd.Series([0]*len(active))).mean())
-                    st.metric("Avg Discount", f"${avg_discount:.2f}")
+                    st.metric("Average offered discount", f"{avg_discount:.1f}%")
                 with c4:
                     c_types = int(active['campaign_type'].nunique()) if 'campaign_type' in active.columns else 0
                     st.metric("Campaign Types", c_types)
@@ -575,6 +581,7 @@ def campaign_management_page():
                     counts = active['campaign_type'].value_counts()
                     fig = px.bar(x=counts.values, y=counts.index, orientation='h', title="Active Campaigns by Type")
                     st.plotly_chart(fig, use_container_width=True)
+                st.caption("The bundled campaign data is synthetic. Status means record status, not demonstrated campaign performance.")
                 st.dataframe(active, use_container_width=True)
             else:
                 st.info("No active campaigns")
@@ -612,20 +619,30 @@ def segmentation_page():
     if customers_df is None or transactions_df is None:
         st.warning("Insufficient data for segmentation")
         return
-    tab1, tab2, tab3 = st.tabs(["Current Segments", "Segmentation Analysis", "Re-segment"]) 
+    tab1, tab2, tab3 = st.tabs(["Stored segments", "Segment analysis", "Legacy K-Means preview"])
     with tab1:
-        st.subheader("Current Customer Segments")
+        st.subheader("Stored customer segments")
+        st.info("The bundled sample database uses deterministic, rule-based segment labels. It does not display predictions from the separate Phase 2 frozen K-Means artifact.")
         if segments_df is not None and not segments_df.empty:
             counts = segments_df['segment_name'].value_counts()
+            segment_counts_df = counts.rename_axis('segment_name').reset_index(name='customer_count')
             col1, col2 = st.columns(2)
             with col1:
-                fig = px.pie(values=counts.values, names=counts.index, title="Segment Distribution")
+                fig = px.bar(
+                    segment_counts_df,
+                    x='customer_count',
+                    y='segment_name',
+                    orientation='h',
+                    title="Customer count by stored segment",
+                    labels={'customer_count': 'Customers', 'segment_name': 'Segment'},
+                )
                 st.plotly_chart(fig, use_container_width=True)
             with col2:
                 st.subheader("Segment Details")
                 for seg, cnt in counts.items():
-                    st.write(f"**{seg}:** {cnt:,} customers ({(cnt/len(segments_df))*100:.1f}%)")
-            st.dataframe(segments_df, use_container_width=True)
+                    st.write(f"**{seg}:** {cnt:,} customers ({(cnt / len(segments_df)) * 100:.1f}%)")
+            st.caption("A large segment can reflect the sample generator thresholds; investigate it as a data-design choice, not an automatic clustering defect.")
+            st.dataframe(segments_df[['customer_id', 'segment_name', 'last_updated']], use_container_width=True)
         else:
             st.info("No segmentation data available")
     with tab2:
@@ -643,6 +660,11 @@ def segmentation_page():
                         'transaction_count': 'mean',
                         'recency_days': 'mean'
                     }).round(2)
+                    metrics.columns = [
+                        'Average spend', 'Median spend', 'Average transaction value',
+                        'Average transactions', 'Average recency (days)',
+                    ]
+                    metrics = metrics.sort_values('Average spend', ascending=False)
                     st.subheader("Segment Comparison")
                     st.dataframe(metrics, use_container_width=True)
                     fig = px.box(seg_analysis, x='segment_name', y='total_spent', title="Spending Distribution by Segment")
@@ -652,10 +674,11 @@ def segmentation_page():
         else:
             st.info("Insufficient data for analysis")
     with tab3:
-        st.subheader("Re-run Segmentation")
+        st.subheader("Legacy K-Means preview")
+        st.warning("This preview does not replace the stored segments or update the database. The Phase 2 artifact remains a separate, unintegrated pipeline.")
         with st.form("segmentation_form"):
             n_clusters = st.slider("Number of Clusters", min_value=2, max_value=10, value=5)
-            submitted = st.form_submit_button("Run Segmentation")
+            submitted = st.form_submit_button("Generate preview")
             if submitted:
                 try:
                     from backend.data.data_preprocessor import DataPreprocessor
@@ -665,9 +688,16 @@ def segmentation_page():
                         with st.spinner("Running segmentation..."):
                             res = segmentation.perform_segmentation(feats, n_clusters)
                         if not res.empty:
-                            st.success(f"Segmentation completed with {n_clusters} clusters")
+                            st.success(f"Preview completed with {n_clusters} clusters")
                             counts = res['segment_name'].value_counts()
-                            fig = px.pie(values=counts.values, names=counts.index, title="New Segment Distribution")
+                            preview_counts_df = counts.rename_axis('segment_name').reset_index(name='customer_count')
+                            fig = px.bar(
+                                preview_counts_df,
+                                x='customer_count',
+                                y='segment_name',
+                                orientation='h',
+                                title="Preview segment distribution",
+                            )
                             st.plotly_chart(fig, use_container_width=True)
                             st.subheader("Segmentation Results (Sample)")
                             st.dataframe(res.head(20), use_container_width=True)
@@ -681,34 +711,23 @@ def segmentation_page():
 
 def main():
     """Main multipage application entry."""
-    st.sidebar.title("CICOP Navigation")
+    st.set_page_config(page_title="CICOP", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
+    apply_custom_css()
     pages = {
-        "🏠 Dashboard": main_dashboard,
-        "👤 Customer Analysis": customer_analysis_page,
-        "🎯 Campaign Management": campaign_management_page,
-        "📊 Segmentation": segmentation_page,
+        "Overview": main_dashboard,
+        "Customers": customer_analysis_page,
+        "Campaigns": campaign_management_page,
+        "Segments": segmentation_page,
     }
-    selected = st.sidebar.selectbox("Choose a page", list(pages.keys()))
-    if st.sidebar.button("🔄 Refresh Data"):
-        try:
-            st.cache_data.clear()
-        except Exception:
-            pass
-        st.rerun()
-    st.sidebar.subheader("System Status")
+    stats = None
     try:
         _, dbm, _, _ = init_components()
         if dbm:
             stats = dbm.get_database_stats()
-            st.sidebar.success("✅ Database Connected")
-            st.sidebar.write(f"Customers: {stats.get('customers',0):,}")
-            st.sidebar.write(f"Transactions: {stats.get('transactions',0):,}")
-        else:
-            st.sidebar.error("❌ Database Error")
     except Exception:
-        st.sidebar.error("❌ System Error")
-    # Render selected page
+        stats = None
+    selected = render_sidebar(list(pages.keys()), stats)
     pages[selected]()
 
 if __name__ == "__main__":
-    main() 
+    main()

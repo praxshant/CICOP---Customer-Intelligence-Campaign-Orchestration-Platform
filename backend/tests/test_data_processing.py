@@ -100,6 +100,22 @@ class TestDataPreprocessor(unittest.TestCase):
         
         for feature in expected_features:
             self.assertIn(feature, customer_features.columns)
+
+    def test_create_customer_features_converts_database_date_strings(self):
+        """Feature creation must work directly on SQLite-style date strings."""
+        transactions = pd.DataFrame({
+            'customer_id': ['CUST_001', 'CUST_001'],
+            'transaction_date': ['2024-01-01', '2024-02-01'],
+            'amount': [100.0, 200.0],
+            'category': ['Shopping', 'Shopping'],
+            'merchant': ['Store A', 'Store B'],
+        })
+
+        features = self.preprocessor.create_customer_features(transactions)
+
+        self.assertEqual(len(features), 1)
+        self.assertEqual(features.loc[0, 'customer_lifetime_days'], 31)
+        self.assertTrue(pd.api.types.is_datetime64_any_dtype(features['last_transaction']))
     
     def test_detect_outliers(self):
         # Step 1: Create test data with outliers

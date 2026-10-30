@@ -71,22 +71,32 @@ class DataPreprocessor:
         return cleaned_df
     
     def create_customer_features(self, transactions_df: pd.DataFrame) -> pd.DataFrame:
-        # Step 1: Calculate customer-level aggregated features
-        customer_features = transactions_df.groupby('customer_id').agg({
+        # Step 1: Normalise dates here so this public method works for database
+        # reads (SQLite returns strings) as well as already-cleaned DataFrames.
+        feature_source = transactions_df.copy()
+        feature_source['transaction_date'] = pd.to_datetime(
+            feature_source['transaction_date'], errors='coerce'
+        )
+        feature_source = feature_source.dropna(subset=['customer_id', 'transaction_date'])
+        if feature_source.empty:
+            return pd.DataFrame()
+
+        # Step 2: Calculate customer-level aggregated features
+        customer_features = feature_source.groupby('customer_id').agg({
             'amount': ['sum', 'mean', 'count', 'std'],
             'transaction_date': ['min', 'max'],
             'category': lambda x: x.value_counts().index[0],  # Most frequent category
             'merchant': 'nunique'
         }).round(2)
         
-        # Step 2: Flatten multi-level column names
+        # Step 3: Flatten multi-level column names
         customer_features.columns = [
             'total_spent', 'avg_transaction_amount', 'transaction_count',
             'spending_std', 'first_transaction', 'last_transaction',
             'primary_category', 'unique_merchants'
         ]
         
-        # Step 3: Calculate derived features
+        # Step 4: Calculate derived features
         customer_features['customer_lifetime_days'] = (
             customer_features['last_transaction'] - customer_features['first_transaction']
         ).dt.days
@@ -105,12 +115,12 @@ class DataPreprocessor:
             ), axis=1
         )
         
-        # Step 4: Calculate recency (days since last transaction)
+        # Step 5: Calculate recency (days since last transaction)
         customer_features['recency_days'] = (
             datetime.now() - customer_features['last_transaction']
         ).dt.days
         
-        # Step 5: Reset index to make customer_id a column
+        # Step 6: Reset index to make customer_id a column
         customer_features = customer_features.reset_index()
         
         self.logger.info(f"Created features for {len(customer_features)} customers")

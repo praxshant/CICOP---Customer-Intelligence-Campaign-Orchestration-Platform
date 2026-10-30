@@ -33,19 +33,22 @@ class CampaignGenerator:
         # Step 3: Generate campaigns using rules engine
         campaigns_df = self.rules_engine.generate_bulk_campaigns(segment_customers, segment_features)
 
-        # Step 4: Add segment information
-        if campaigns_df:  # Handle both DataFrame and list
-            if isinstance(campaigns_df, list):
-                campaigns_df = pd.DataFrame(campaigns_df)
+        # Step 4: Add segment information. RulesEngine currently returns a list,
+        # but accepting a DataFrame avoids pandas' ambiguous truth-value error.
+        if isinstance(campaigns_df, list):
+            if not campaigns_df:
+                self.logger.warning(f"No campaigns generated for segment: {segment_name}")
+                return pd.DataFrame()
+            campaigns_df = pd.DataFrame(campaigns_df)
+        if isinstance(campaigns_df, pd.DataFrame) and not campaigns_df.empty:
 
             campaigns_df['target_segment'] = segment_name
             campaigns_df['campaign_name'] = f"{segment_name}_{campaigns_df['campaign_type']}"
 
             self.logger.info(f"Generated {len(campaigns_df)} campaigns for segment: {segment_name}")
             return campaigns_df
-        else:
-            self.logger.warning(f"No campaigns generated for segment: {segment_name}")
-            return pd.DataFrame()
+        self.logger.warning(f"No campaigns generated for segment: {segment_name}")
+        return pd.DataFrame()
 
     def generate_personalized_campaigns(self, customers_df,
                                         customer_features_df=None,
@@ -338,15 +341,18 @@ class CampaignGenerator:
 
         if isinstance(campaigns_df, list):
             if not campaigns_df:
-                return {'selected_campaigns': [], 'total_budget_used': 0, 'expected_roi': 0}
+                return {'selected_campaigns': [], 'total_budget_used': 0, 'priority_score_total': 0, 'expected_roi': 0}
             campaigns_df = pd.DataFrame(campaigns_df)
         elif campaigns_df.empty:
-            return {'selected_campaigns': [], 'total_budget_used': 0, 'expected_roi': 0}
+            return {'selected_campaigns': [], 'total_budget_used': 0, 'priority_score_total': 0, 'expected_roi': 0}
 
-        campaigns_df['expected_roi'] = campaigns_df['discount_percentage'] * campaigns_df['priority_score']
+        # This is a ranking contribution, not monetary return on investment. A
+        # conversion/revenue model is required before CICOP can report ROI.
+        campaigns_df = campaigns_df.copy()
+        campaigns_df['priority_contribution'] = campaigns_df['discount_percentage'] * campaigns_df['priority_score']
         campaigns_df['campaign_cost'] = campaigns_df['min_purchase'] * (campaigns_df['discount_percentage'] / 100)
 
-        campaigns_df = campaigns_df.sort_values('expected_roi', ascending=False)
+        campaigns_df = campaigns_df.sort_values('priority_contribution', ascending=False)
 
         cumulative_cost = 0
         selected_campaigns = []
@@ -358,7 +364,7 @@ class CampaignGenerator:
             else:
                 break
 
-        total_roi = sum(c['expected_roi'] for c in selected_campaigns)
+        priority_score_total = sum(c['priority_contribution'] for c in selected_campaigns)
 
         self.logger.info(
             f"Optimized portfolio: {len(selected_campaigns)} campaigns selected with budget ${budget_constraint}"
@@ -367,7 +373,9 @@ class CampaignGenerator:
         return {
             'selected_campaigns': selected_campaigns,
             'total_budget_used': cumulative_cost,
-            'expected_roi': total_roi
+            'priority_score_total': priority_score_total,
+            # Deprecated compatibility alias. Do not present this as ROI.
+            'expected_roi': priority_score_total,
         }
 
     def generate_campaign_report(self, campaigns_df) -> Dict[str, Any]:
